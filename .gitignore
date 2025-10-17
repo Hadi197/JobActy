@@ -112,3 +112,4 @@ dmypy.json
 last_id.txt
 data_job.json
 job.csv
+!job.csv
