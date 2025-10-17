@@ -7,22 +7,30 @@ from datetime import datetime, timedelta
 
 
 def save_batch(batch_df, filename='job.csv'):
-    """Menyimpan batch DataFrame ke CSV dengan flush & fsync agar aman di GitHub Actions."""
+    """Simpan batch ke CSV lalu langsung commit & push ke GitHub."""
     if batch_df.empty:
         print(f"[{datetime.now()}] ⚠️ Batch kosong, tidak disimpan.")
         return
 
     file_exists = os.path.exists(filename)
 
-    # Simpan data ke file CSV
+    # Simpan ke CSV
     with open(filename, 'a', newline='', encoding='utf-8') as f:
         batch_df.to_csv(f, header=not file_exists, index=False)
-
-        # Flush buffer Python dan sinkronkan ke storage
-        f.flush()               # flush buffer Python → OS
-        os.fsync(f.fileno())    # flush buffer OS → disk fisik
+        f.flush()
+        os.fsync(f.fileno())
 
     print(f"[{datetime.now()}] ✅ Batch disimpan ({len(batch_df)} baris) ke {filename}")
+
+    # === Commit & push otomatis ke GitHub ===
+    print(f"[{datetime.now()}] 🔄 Commit & push batch ke GitHub...")
+    os.system("""
+    git config --global user.name "github-actions[bot]"
+    git config --global user.email "github-actions[bot]@users.noreply.github.com"
+    git add -f job.csv last_id.txt
+    git commit -m "Auto commit batch at $(date '+%Y-%m-%d %H:%M:%S') [skip ci]" || echo "No changes to commit"
+    git push origin main || echo "⚠️ Push gagal (mungkin tidak ada perubahan)"
+    """)
 
 # Header dengan access-token
 headers = {
