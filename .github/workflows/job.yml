@@ -39,6 +39,13 @@ jobs:
         echo "=== job.csv size ==="
         ls -lh job.csv || echo "No file"
 
+    - name: Lihat hasil akhir CSV
+      run: |
+        echo "=== job.csv size ==="
+        ls -lh job.csv
+        echo "=== job.csv last 10 lines ==="
+        tail -n 10 job.csv
+
     - name: Commit and push changes
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
