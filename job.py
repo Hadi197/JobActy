@@ -16,7 +16,6 @@ headers = {
 desired_columns = [
     'data.id_order_header',
     'data.ppkb_description.id_ppkb_ppkb.id_pkk_pkk.no_pkk_inaportnet',
-    'data.id_pilot_type',
     'data.pilot_request_time',
     'data.approval_date',
     'data.integration_data.integration.no_spk_pandu',
@@ -48,7 +47,6 @@ desired_columns = [
 simple_names = [
     'id_order_header',
     'no_pkk_inaportnet',
-    'id_pilot_type',
     'pilot_request_time',
     'approval_date',
     'no_spk_pandu',
@@ -79,6 +77,17 @@ simple_names = [
 
 if not os.path.exists("job.csv"):
     pd.DataFrame(columns=simple_names).to_csv("job.csv", index=False)
+
+# Load existing IDs to avoid duplicates
+existing_ids = set()
+if os.path.exists("job.csv"):
+    try:
+        existing_df = pd.read_csv("job.csv")
+        existing_ids = set(existing_df['id_order_header'].dropna().astype(int))
+        print(f"Loaded {len(existing_ids)} existing IDs from job.csv")
+    except Exception as e:
+        print(f"Error loading existing IDs: {e}")
+        existing_ids = set()
 
 # Daftar order IDs untuk diambil (mulai dari ID rendah dan ambil sampai tidak ada data)
 start_id_file = 'last_id.txt'
@@ -124,6 +133,18 @@ while counter < max_attempts and consecutive_failures < max_consecutive_failures
             df = df[available_columns]
             rename_dict = {old: new for old, new in zip(available_columns, simple_names[:len(available_columns)])}
             df.rename(columns=rename_dict, inplace=True)
+            
+            # Check for duplicates
+            if 'id_order_header' in df.columns and not df.empty:
+                order_id = df['id_order_header'].iloc[0]
+                if order_id in existing_ids:
+                    print(f"Duplicate ID {order_id} found, skipping.")
+                    consecutive_failures += 1
+                    current_id += 1
+                    continue
+                else:
+                    existing_ids.add(order_id)
+            
             all_data.append(df)
             batch_count += 1
             consecutive_failures = 0  # Reset counter
