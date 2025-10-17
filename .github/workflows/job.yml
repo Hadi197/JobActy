@@ -43,15 +43,22 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        set -e
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-        # Tambahkan file CSV & log ID terakhir
-        git add job.csv last_id.txt
+        echo "=== Check files before commit ==="
+        ls -lh job.csv || echo "job.csv not found"
+        git status
 
-        # Commit jika ada perubahan, atau paksa jika tidak terdeteksi
+        # Paksa add agar tidak di-skip karena gitignore
+        git add -f job.csv last_id.txt
+
+        echo "=== Check diff after add ==="
+        git diff --staged --stat || echo "no diff found"
+
         if git diff --staged --quiet; then
-          echo "⚠️ No changes detected — forcing commit"
+          echo "⚠️ No changes detected — forcing timestamp update"
           echo "$(date)" >> .timestamp
           git add .timestamp
           git commit -m "Force update timestamp to trigger commit [skip ci]"
@@ -59,5 +66,5 @@ jobs:
           git commit -m "Update job.csv and last_id.txt [skip ci]"
         fi
 
-        # Push langsung ke branch main
+        echo "=== Push to main ==="
         git push https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
