@@ -29,7 +29,18 @@ jobs:
         python -m pip install --upgrade pip
         pip install requests pandas
 
+    # 🟢 Langkah penting tambahan ini
+    - name: Setup Git credentials for internal push
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+
+    # 🟢 Tambahan: kirim token ke job.py agar bisa push langsung
     - name: Run job.py
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        REPO_URL: https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
       run: python job.py
 
     - name: Debug job.csv before commit
