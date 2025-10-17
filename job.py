@@ -105,7 +105,7 @@ all_data = []
 batch_size = 50
 batch_count = 0
 
-while counter < max_attempts and consecutive_failures < max_consecutive_failures:
+while counter < max_attempts and consecutive_failures < max_consecutive_failures and current_id <= 2011500:
     counter += 1
     print(f"Processing ID: {current_id}")
     url = f"https://phinnisi.pelindo.co.id:9018/api/jobactivities/detail-order/{current_id}"
