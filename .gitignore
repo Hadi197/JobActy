@@ -109,5 +109,4 @@ dmypy.json
 .pyre/
 
 # Project specific
-last_id.txt
 data_job.json
