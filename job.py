@@ -77,6 +77,9 @@ simple_names = [
     'type_name'
 ]
 
+if not os.path.exists("job.csv"):
+    pd.DataFrame(columns=simple_names).to_csv("job.csv", index=False)
+
 # Daftar order IDs untuk diambil (mulai dari ID rendah dan ambil sampai tidak ada data)
 start_id_file = 'last_id.txt'
 if os.path.exists(start_id_file):
@@ -84,13 +87,14 @@ if os.path.exists(start_id_file):
         start_id = int(f.read().strip())
 else:
     start_id = 2011000
-order_ids = []
 current_id = start_id
 consecutive_failures = 0
-max_consecutive_failures = 50
+max_consecutive_failures = 500
 max_attempts = 1000000
 counter = 0
-consecutive_failures = 0
+all_data = []
+batch_size = 50
+batch_count = 0
 
 while counter < max_attempts and consecutive_failures < max_consecutive_failures:
     counter += 1
@@ -98,15 +102,57 @@ while counter < max_attempts and consecutive_failures < max_consecutive_failures
     url = f"https://phinnisi.pelindo.co.id:9018/api/jobactivities/detail-order/{current_id}"
     print(f"Mengambil data untuk order ID: {current_id}")
     
-    response = requests.get(url, headers=headers)
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+    except requests.exceptions.RequestException as e:
+        print(f"⚠️ Request error: {e}")
+        consecutive_failures += 1
+        current_id += 1
+        continue
     
     if response.status_code == 200:
-        data = response.json()
+        try:
+            data = response.json()
+        except ValueError:
+            print("⚠️ Response bukan JSON, skip.")
+            data = None
         # Cek jika data ada (misalnya, jika ada id_order_header)
         if data and 'data' in data and data['data']:
-            order_ids.append(current_id)
+            # Normalisasi data JSON langsung
+            df = pd.json_normalize(data)
+            available_columns = [col for col in desired_columns if col in df.columns]
+            df = df[available_columns]
+            rename_dict = {old: new for old, new in zip(available_columns, simple_names[:len(available_columns)])}
+            df.rename(columns=rename_dict, inplace=True)
+            all_data.append(df)
+            batch_count += 1
             consecutive_failures = 0  # Reset counter
-            print(f"Berhasil menemukan data untuk order ID: {current_id}")
+            print(f"Berhasil menemukan dan menyimpan data untuk order ID: {current_id}")
+            
+            # Simpan setiap batch_size
+            if len(all_data) >= batch_size:
+                combined_df = pd.concat(all_data, ignore_index=True)
+                print(f"Data sebelum filter: {len(combined_df)}")
+                
+                # Filter berdasarkan approval_date dari hari berjalan -1 hingga +2 hari
+                # start_date = (datetime.now().date() - timedelta(days=1))
+                # end_date = (datetime.now().date() + timedelta(days=2))
+                # combined_df['data.approval_date'] = pd.to_datetime(combined_df['data.approval_date'], errors='coerce').dt.date
+                # combined_df = combined_df[(combined_df['data.approval_date'] >= start_date) & (combined_df['data.approval_date'] <= end_date)]
+                print(f"Data setelah filter: {len(combined_df)} (filter disabled)")
+                print(f"Columns in combined_df: {list(combined_df.columns)}")
+                
+                if not combined_df.empty:
+                    try:
+                        print("Saving data...")
+                        combined_df.to_csv("job.csv", mode="a", index=False, header=not os.path.exists("job.csv"))
+                        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Batch disimpan (ID terakhir: {current_id})")
+                        # Clear all_data after saving
+                        all_data = []
+                        with open(start_id_file, 'w') as f:
+                            f.write(str(current_id))
+                    except Exception as e:
+                        print(f"Error saving data: {e}")
         else:
             consecutive_failures += 1
             print(f"Tidak ada data untuk order ID: {current_id}")
@@ -115,95 +161,36 @@ while counter < max_attempts and consecutive_failures < max_consecutive_failures
         print(f"Gagal mengambil data untuk order ID: {current_id} - Status: {response.status_code}")
     
     current_id += 1
-    time.sleep(0.1)
+    time.sleep(0.3)  # 3 request per detik (aman)
 
-print(f"Stopped after {counter} attempts, {len(order_ids)} order IDs found, consecutive failures: {consecutive_failures}")
+print(f"Stopped after {counter} attempts, {len(all_data)} data in memory, consecutive failures: {consecutive_failures}")
 
-print(f"Total order IDs ditemukan: {len(order_ids)}")
+# Simpan last_id
+with open(start_id_file, 'w') as f:
+    f.write(str(current_id))
 
-all_data = []
-batch_size = 1000000
-batch_count = 0
 
-for order_id in order_ids:
-    url = f"https://phinnisi.pelindo.co.id:9018/api/jobactivities/detail-order/{order_id}"
-    print(f"Mengambil data untuk order ID: {order_id}")
-    
-    response = requests.get(url, headers=headers)
-    
-    if response.status_code == 200:
-        data = response.json()
-        # Normalisasi data JSON
-        df = pd.json_normalize(data)
-        all_data.append(df)
-        batch_count += 1
-        print(f"Berhasil mengambil data untuk order ID: {order_id}")
-        
-        # Simpan setiap batch_size
-        if batch_count % batch_size == 0:
-            combined_df = pd.concat(all_data, ignore_index=True)
-            print(f"Data sebelum filter: {len(combined_df)}")
-            
-            # Filter berdasarkan approval_date dari hari berjalan -1 hingga +2 hari
-            # start_date = (datetime.now().date() - timedelta(days=1))
-            # end_date = (datetime.now().date() + timedelta(days=2))
-            # combined_df['data.approval_date'] = pd.to_datetime(combined_df['data.approval_date'], errors='coerce').dt.date
-            # combined_df = combined_df[(combined_df['data.approval_date'] >= start_date) & (combined_df['data.approval_date'] <= end_date)]
-            print(f"Data setelah filter: {len(combined_df)} (filter disabled)")
-            print(f"Columns in combined_df: {list(combined_df.columns)}")
-            
-            if not combined_df.empty:
-                try:
-                    print("Saving data...")
-                    # Simpan semua kolom untuk test
-                    if os.path.exists('job.csv'):
-                        existing_df = pd.read_csv('job.csv')
-                        combined_df = pd.concat([existing_df, combined_df], ignore_index=True)
-                    combined_df.to_csv('job.csv', index=False)
-                    print(f"Batch {batch_count // batch_size} disimpan, total data: {len(combined_df)}")
-                except Exception as e:
-                    print(f"Error saving: {e}")
-                # Save last ID
-                with open(start_id_file, 'w') as f:
-                    f.write(str(current_id - 1))
-                # Stop after first batch for test
-                if batch_count // batch_size >= 1:
-                    print("Stopping after first batch for test.")
-                    break
-            else:
-                print(f"Batch {batch_count // batch_size} kosong setelah filter, tidak disimpan")
-            all_data = []  # Reset
-    else:
-        print(f"Gagal mengambil data untuk order ID: {order_id} - Status: {response.status_code}")
-    
-    # Delay kecil untuk menghindari rate limiting
-    time.sleep(0.1)
-
-# Menggabungkan semua data
+# Simpan data sisa jika ada
 if all_data:
     combined_df = pd.concat(all_data, ignore_index=True)
+    print(f"Data sisa sebelum filter: {len(combined_df)}")
     
     # Filter berdasarkan approval_date dari hari berjalan -1 hingga +2 hari
     # start_date = (datetime.now().date() - timedelta(days=1))
     # end_date = (datetime.now().date() + timedelta(days=2))
     # combined_df['data.approval_date'] = pd.to_datetime(combined_df['data.approval_date'], errors='coerce').dt.date
     # combined_df = combined_df[(combined_df['data.approval_date'] >= start_date) & (combined_df['data.approval_date'] <= end_date)]
+    print(f"Data sisa setelah filter: {len(combined_df)} (filter disabled)")
+    print(f"Columns in combined_df: {list(combined_df.columns)}")
     
     if not combined_df.empty:
-        # Pilih hanya kolom yang diinginkan
-        available_columns = [col for col in desired_columns if col in combined_df.columns]
-        combined_df = combined_df[available_columns]
-        
-        # Rename kolom
-        rename_dict = {old: new for old, new in zip(available_columns, simple_names[:len(available_columns)])}
-        combined_df = combined_df.rename(columns=rename_dict)
-        
-        # Simpan atau append sisa
-        if os.path.exists('job.csv'):
-            existing_df = pd.read_csv('job.csv')
-            combined_df = pd.concat([existing_df, combined_df], ignore_index=True)
-        combined_df.to_csv('job.csv', index=False)
-        print(f"Data sisa berhasil disimpan ke job.csv, total: {len(combined_df)}")
+        try:
+            print("Saving remaining data...")
+            # Simpan semua kolom untuk test
+            combined_df.to_csv("job.csv", mode="a", index=False, header=False)
+            print(f"Data sisa berhasil disimpan ke job.csv, total: {len(combined_df)}")
+        except Exception as e:
+            print(f"Error saving remaining data: {e}")
     else:
         print("Data sisa kosong setelah filter, tidak disimpan")
 else:
