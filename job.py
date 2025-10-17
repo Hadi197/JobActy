@@ -87,11 +87,12 @@ else:
 order_ids = []
 current_id = start_id
 consecutive_failures = 0
-max_consecutive_failures = 10
+max_consecutive_failures = 50
 max_attempts = 1000000
 counter = 0
+consecutive_failures = 0
 
-while counter < max_attempts:
+while counter < max_attempts and consecutive_failures < max_consecutive_failures:
     counter += 1
     print(f"Processing ID: {current_id}")
     url = f"https://phinnisi.pelindo.co.id:9018/api/jobactivities/detail-order/{current_id}"
@@ -104,16 +105,19 @@ while counter < max_attempts:
         # Cek jika data ada (misalnya, jika ada id_order_header)
         if data and 'data' in data and data['data']:
             order_ids.append(current_id)
+            consecutive_failures = 0  # Reset counter
             print(f"Berhasil menemukan data untuk order ID: {current_id}")
         else:
+            consecutive_failures += 1
             print(f"Tidak ada data untuk order ID: {current_id}")
     else:
+        consecutive_failures += 1
         print(f"Gagal mengambil data untuk order ID: {current_id} - Status: {response.status_code}")
     
     current_id += 1
     time.sleep(0.1)
 
-print(f"Stopped after {counter} attempts, {len(order_ids)} order IDs found")
+print(f"Stopped after {counter} attempts, {len(order_ids)} order IDs found, consecutive failures: {consecutive_failures}")
 
 print(f"Total order IDs ditemukan: {len(order_ids)}")
 
