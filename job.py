@@ -5,6 +5,25 @@ import time
 import os
 from datetime import datetime, timedelta
 
+
+def save_batch(batch_df, filename='job.csv'):
+    """Menyimpan batch DataFrame ke CSV dengan flush & fsync agar aman di GitHub Actions."""
+    if batch_df.empty:
+        print(f"[{datetime.now()}] ⚠️ Batch kosong, tidak disimpan.")
+        return
+
+    file_exists = os.path.exists(filename)
+
+    # Simpan data ke file CSV
+    with open(filename, 'a', newline='', encoding='utf-8') as f:
+        batch_df.to_csv(f, header=not file_exists, index=False)
+
+        # Flush buffer Python dan sinkronkan ke storage
+        f.flush()               # flush buffer Python → OS
+        os.fsync(f.fileno())    # flush buffer OS → disk fisik
+
+    print(f"[{datetime.now()}] ✅ Batch disimpan ({len(batch_df)} baris) ke {filename}")
+
 # Header dengan access-token
 headers = {
     "accept": "application/json, text/plain, */*",
@@ -105,7 +124,7 @@ all_data = []
 batch_size = 50
 batch_count = 0
 
-while counter < max_attempts and consecutive_failures < max_consecutive_failures and current_id <= 2011500:
+while counter < max_attempts and consecutive_failures < max_consecutive_failures and current_id <= 2011250:
     counter += 1
     print(f"Processing ID: {current_id}")
     url = f"https://phinnisi.pelindo.co.id:9018/api/jobactivities/detail-order/{current_id}"
@@ -165,13 +184,38 @@ while counter < max_attempts and consecutive_failures < max_consecutive_failures
                 
                 if not combined_df.empty:
                     try:
-                        print("Saving data...")
-                        combined_df.to_csv("job.csv", mode="a", index=False, header=not os.path.exists("job.csv"))
-                        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Batch disimpan (ID terakhir: {current_id})")
-                        # Clear all_data after saving
-                        all_data = []
-                        with open(start_id_file, 'w') as f:
-                            f.write(str(current_id))
+                        print("Preparing to save batch...")
+
+                        # Read existing IDs on disk to avoid duplicates (in case file changed externally)
+                        existing_on_disk = set()
+                        if os.path.exists('job.csv'):
+                            try:
+                                existing_on_disk = set(pd.read_csv('job.csv', usecols=['id_order_header'])['id_order_header'].dropna().astype(int))
+                            except Exception:
+                                existing_on_disk = set()
+
+                        # Filter out IDs already present on disk
+                        if 'id_order_header' in combined_df.columns:
+                            combined_df['id_order_header'] = combined_df['id_order_header'].astype(int)
+                            before_count = len(combined_df)
+                            combined_df = combined_df[~combined_df['id_order_header'].isin(existing_on_disk)]
+                            filtered_count = len(combined_df)
+                            print(f"Filtered {before_count - filtered_count} duplicate rows based on existing job.csv")
+
+                        if not combined_df.empty:
+                            save_batch(combined_df, filename='job.csv')
+                            # Update in-memory existing_ids with what we just saved
+                            try:
+                                saved_ids = set(combined_df['id_order_header'].dropna().astype(int))
+                                existing_ids.update(saved_ids)
+                            except Exception:
+                                pass
+
+                            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Batch disimpan (ID terakhir: {current_id})")
+                            # Clear all_data after saving
+                            all_data = []
+                            with open(start_id_file, 'w') as f:
+                                f.write(str(current_id))
                     except Exception as e:
                         print(f"Error saving data: {e}")
         else:
@@ -206,10 +250,34 @@ if all_data:
     
     if not combined_df.empty:
         try:
-            print("Saving remaining data...")
-            # Simpan semua kolom untuk test
-            combined_df.to_csv("job.csv", mode="a", index=False, header=False)
-            print(f"Data sisa berhasil disimpan ke job.csv, total: {len(combined_df)}")
+            print("Preparing to save remaining data...")
+
+            # Read existing IDs on disk to avoid duplicates
+            existing_on_disk = set()
+            if os.path.exists('job.csv'):
+                try:
+                    existing_on_disk = set(pd.read_csv('job.csv', usecols=['id_order_header'])['id_order_header'].dropna().astype(int))
+                except Exception:
+                    existing_on_disk = set()
+
+            if 'id_order_header' in combined_df.columns:
+                combined_df['id_order_header'] = combined_df['id_order_header'].astype(int)
+                before_count = len(combined_df)
+                combined_df = combined_df[~combined_df['id_order_header'].isin(existing_on_disk)]
+                filtered_count = len(combined_df)
+                print(f"Filtered {before_count - filtered_count} duplicate rows in remaining data")
+
+            if not combined_df.empty:
+                save_batch(combined_df, filename='job.csv')
+                try:
+                    saved_ids = set(combined_df['id_order_header'].dropna().astype(int))
+                    existing_ids.update(saved_ids)
+                except Exception:
+                    pass
+
+                print(f"Data sisa berhasil disimpan ke job.csv, total: {len(combined_df)}")
+            else:
+                print("Data sisa kosong setelah filter, tidak disimpan")
         except Exception as e:
             print(f"Error saving remaining data: {e}")
     else:
