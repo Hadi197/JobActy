@@ -24,13 +24,23 @@ def save_batch(batch_df, filename='job.csv'):
 
     # === Commit & push otomatis ke GitHub ===
     print(f"[{datetime.now()}] 🔄 Commit & push batch ke GitHub...")
-    os.system("""
+
+    # Prepare commit commands (use shell date for timestamp)
+    commit_cmds = '''
     git config --global user.name "github-actions[bot]"
     git config --global user.email "github-actions[bot]@users.noreply.github.com"
     git add -f job.csv last_id.txt
     git commit -m "Auto commit batch at $(date '+%Y-%m-%d %H:%M:%S') [skip ci]" || echo "No changes to commit"
-    git push origin main || echo "⚠️ Push gagal (mungkin tidak ada perubahan)"
-    """)
+    '''
+
+    repo_url = os.environ.get('REPO_URL', '').strip()
+    if repo_url:
+        push_cmd = f"git push {repo_url} HEAD:main || echo \"⚠️ Push gagal (mungkin tidak ada perubahan)\""
+    else:
+        push_cmd = "git push origin main || echo \"⚠️ Push gagal (mungkin tidak ada perubahan)\""
+
+    full_cmd = commit_cmds + "\n" + push_cmd
+    os.system(full_cmd)
 
 # Header dengan access-token
 headers = {
