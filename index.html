@@ -105,6 +105,10 @@
                             locationName.innerHTML = `<strong class="text-indigo-700">Location:</strong> ${row.location_name || 'N/A'}`;
                             details.appendChild(locationName);
                             
+                            const noPkk = document.createElement('div');
+                            noPkk.innerHTML = `<strong class="text-indigo-700">No PKK Inaportnet:</strong> ${row.no_pkk_inaportnet || 'N/A'}`;
+                            details.appendChild(noPkk);
+                            
                             const guideHours = document.createElement('div');
                             guideHours.innerHTML = `<strong class="text-indigo-700">Guide Hours Change:</strong> ${row.guide_request_hours_change ? new Date(row.guide_request_hours_change).toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'N/A'}`;
                             details.appendChild(guideHours);
