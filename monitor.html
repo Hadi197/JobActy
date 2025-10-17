@@ -64,14 +64,22 @@
                             card.setAttribute('data-vessel', row.vessel_name || '');
                             
                             const header = document.createElement('h3');
-                            header.className = 'text-xl font-semibold text-gray-800 mb-4 flex items-center';
+                            header.className = 'text-xl font-semibold text-gray-800 mb-4 flex items-center justify-between';
                             header.innerHTML = `
-                                <svg class="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
-                                </svg>
-                                Order ID: ${row.id_order_header || 'N/A'}
+                                <span class="text-lg text-gray-600">${row.vessel_name || 'N/A'}</span>
+                                <span class="flex items-center">
+                                    <svg class="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                                    </svg>
+                                    Order ID: ${row.id_order_header || 'N/A'}
+                                </span>
                             `;
                             card.appendChild(header);
+                            
+                            const branchDiv = document.createElement('div');
+                            branchDiv.className = 'text-xs text-gray-500';
+                            branchDiv.textContent = row.name_branch || 'N/A';
+                            card.appendChild(branchDiv);
                             
                             const details = document.createElement('div');
                             details.className = 'grid grid-cols-2 gap-4 mb-6 text-sm bg-gray-50 p-4 rounded-lg';
@@ -87,14 +95,6 @@
                             const locationName = document.createElement('div');
                             locationName.innerHTML = `<strong class="text-indigo-700">Location:</strong> ${row.location_name || 'N/A'}`;
                             details.appendChild(locationName);
-                            
-                            const vesselName = document.createElement('div');
-                            vesselName.innerHTML = `<strong class="text-indigo-700">Vessel:</strong> ${row.vessel_name || 'N/A'}`;
-                            details.appendChild(vesselName);
-                            
-                            const branchName = document.createElement('div');
-                            branchName.innerHTML = `<strong class="text-indigo-700">Branch Name:</strong> ${row.name_branch || 'N/A'}`;
-                            details.appendChild(branchName);
                             
                             const guideHours = document.createElement('div');
                             guideHours.innerHTML = `<strong class="text-indigo-700">Guide Hours Change:</strong> ${row.guide_request_hours_change ? new Date(row.guide_request_hours_change).toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'N/A'}`;
