@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pilot Monitoring Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 font-sans min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8 text-center">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Pilot Monitoring Dashboard</h1>
+            <p class="text-gray-600 text-lg">Real-time monitoring of pilot activities</p>
+        </header>
+
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-xl font-semibold text-gray-800">Pilot Activity Timelines</h2>
+                <div class="flex space-x-4">
+                    <select id="branchSelect" class="px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="all">All Branches</option>
+                    </select>
+                    <input type="text" id="vesselSearch" placeholder="Search Vessel..." class="px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div id="timelineContainer" class="p-6 space-y-6">
+                <!-- Cards will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load CSV data
+        fetch('job.csv')
+            .then(response => response.text())
+            .then(csvText => {
+                Papa.parse(csvText, {
+                    header: true,
+                    complete: function(results) {
+                        const data = results.data;
+                        const container = document.getElementById('timelineContainer');
+                        const select = document.getElementById('branchSelect');
+                        const branches = new Set();
+                        
+                        data.forEach(row => {
+                            if (row.name_branch) {
+                                branches.add(row.name_branch);
+                            }
+                        });
+                        
+                        // Populate select
+                        Array.from(branches).sort().forEach(branch => {
+                            const option = document.createElement('option');
+                            option.value = branch;
+                            option.textContent = branch;
+                            select.appendChild(option);
+                        });
+                        
+                        data.forEach(row => {
+                            const card = document.createElement('div');
+                            card.className = 'bg-white shadow-lg hover:shadow-xl rounded-xl p-6 transition-shadow duration-300 border border-gray-200 hover:border-indigo-300';
+                            card.setAttribute('data-branch', row.name_branch || '');
+                            card.setAttribute('data-vessel', row.vessel_name || '');
+                            
+                            const header = document.createElement('h3');
+                            header.className = 'text-xl font-semibold text-gray-800 mb-4 flex items-center';
+                            header.innerHTML = `
+                                <svg class="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                                </svg>
+                                Order ID: ${row.id_order_header || 'N/A'}
+                            `;
+                            card.appendChild(header);
+                            
+                            const details = document.createElement('div');
+                            details.className = 'grid grid-cols-2 gap-4 mb-6 text-sm bg-gray-50 p-4 rounded-lg';
+                            
+                            const requestTime = document.createElement('div');
+                            requestTime.innerHTML = `<strong class="text-indigo-700">Pilot Request Time:</strong> ${row.pilot_request_time ? new Date(row.pilot_request_time).toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'N/A'}`;
+                            details.appendChild(requestTime);
+                            
+                            const pilotName = document.createElement('div');
+                            pilotName.innerHTML = `<strong class="text-indigo-700">Pilot Name:</strong> ${row.pilot_name || 'N/A'}`;
+                            details.appendChild(pilotName);
+                            
+                            const locationName = document.createElement('div');
+                            locationName.innerHTML = `<strong class="text-indigo-700">Location:</strong> ${row.location_name || 'N/A'}`;
+                            details.appendChild(locationName);
+                            
+                            const vesselName = document.createElement('div');
+                            vesselName.innerHTML = `<strong class="text-indigo-700">Vessel:</strong> ${row.vessel_name || 'N/A'}`;
+                            details.appendChild(vesselName);
+                            
+                            const branchName = document.createElement('div');
+                            branchName.innerHTML = `<strong class="text-indigo-700">Branch Name:</strong> ${row.name_branch || 'N/A'}`;
+                            details.appendChild(branchName);
+                            
+                            const guideHours = document.createElement('div');
+                            guideHours.innerHTML = `<strong class="text-indigo-700">Guide Hours Change:</strong> ${row.guide_request_hours_change ? new Date(row.guide_request_hours_change).toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'N/A'}`;
+                            details.appendChild(guideHours);
+                            
+                            card.appendChild(details);
+                            
+                            const timeline = document.createElement('div');
+                            timeline.className = 'relative flex items-center space-x-4 overflow-x-auto bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg';
+                            
+                            // Add connecting line
+                            const line = document.createElement('div');
+                            line.className = 'absolute top-8 left-8 right-8 h-0.5 bg-indigo-300 z-0';
+                            timeline.appendChild(line);
+                            
+                            const steps = [
+                                { label: 'Pilot Deploy', time: row.pilot_deploy },
+                                { label: 'Pilot Arrive', time: row.pilot_arrive },
+                                { label: 'Pilot Onboard', time: row.pilot_onboard },
+                                { label: 'Pilot Start', time: row.pilot_start },
+                                { label: 'Pilot End', time: row.pilot_end },
+                                { label: 'Pilot Off', time: row.pilot_off }
+                            ];
+                            
+                            steps.forEach((step, index) => {
+                                const stepDiv = document.createElement('div');
+                                stepDiv.className = 'flex flex-col items-center min-w-0 z-10';
+                                
+                                const icon = document.createElement('div');
+                                icon.className = `w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md ${step.time ? 'bg-green-500' : 'bg-gray-400'}`;
+                                icon.innerHTML = step.time ? `
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                ` : `${index + 1}`;
+                                stepDiv.appendChild(icon);
+                                
+                                const label = document.createElement('div');
+                                label.className = 'text-xs text-gray-700 mt-2 text-center font-medium';
+                                label.textContent = step.label;
+                                stepDiv.appendChild(label);
+                                
+                                const time = document.createElement('div');
+                                time.className = 'text-xs text-gray-600 mt-1 text-center bg-white px-2 py-1 rounded shadow-sm';
+                                if (step.time) {
+                                    const date = new Date(step.time);
+                                    time.textContent = date.toLocaleString('id-ID', { 
+                                        year: 'numeric', 
+                                        month: '2-digit', 
+                                        day: '2-digit', 
+                                        hour: '2-digit', 
+                                        minute: '2-digit' 
+                                    });
+                                } else {
+                                    time.textContent = 'Proses';
+                                }
+                                stepDiv.appendChild(time);
+                                
+                                timeline.appendChild(stepDiv);
+                                
+                                if (index < steps.length - 1) {
+                                    const spacer = document.createElement('div');
+                                    spacer.className = 'w-8';
+                                    timeline.appendChild(spacer);
+                                }
+                            });
+                            
+                            card.appendChild(timeline);
+                            
+                            // Cek jika delay
+                            const now = new Date();
+                            const reqTime = row.pilot_request_time ? new Date(row.pilot_request_time) : null;
+                            const deployTime = row.pilot_deploy ? new Date(row.pilot_deploy) : null;
+                            if (reqTime && reqTime < now && !deployTime) {
+                                card.className += ' bg-yellow-100 border-yellow-300';
+                                const delayDiv = document.createElement('div');
+                                delayDiv.className = 'mt-4 p-2 bg-yellow-200 text-yellow-800 rounded text-center font-semibold';
+                                delayDiv.textContent = 'Delay';
+                                card.appendChild(delayDiv);
+                            }
+                            
+                            container.appendChild(card);
+                        });
+                        
+                        // Filter function
+                        function filterCards() {
+                            const selectedBranch = document.getElementById('branchSelect').value;
+                            const searchTerm = document.getElementById('vesselSearch').value.toLowerCase();
+                            const cards = container.querySelectorAll('[data-branch]');
+                            cards.forEach(card => {
+                                const branch = card.getAttribute('data-branch');
+                                const vessel = card.getAttribute('data-vessel').toLowerCase();
+                                const branchMatch = selectedBranch === 'all' || branch === selectedBranch;
+                                const vesselMatch = !searchTerm || vessel.includes(searchTerm);
+                                if (branchMatch && vesselMatch) {
+                                    card.style.display = 'block';
+                                } else {
+                                    card.style.display = 'none';
+                                }
+                            });
+                        }
+                        
+                        select.addEventListener('change', filterCards);
+                        document.getElementById('vesselSearch').addEventListener('input', filterCards);
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error loading CSV:', error);
+                document.getElementById('timelineContainer').innerHTML = '<p class="text-center text-gray-500">Error loading data</p>';
+            });
+    </script>
+</body>
+</html>
