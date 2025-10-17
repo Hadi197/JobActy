@@ -111,4 +111,3 @@ dmypy.json
 # Project specific
 last_id.txt
 data_job.json
-!job.csv
