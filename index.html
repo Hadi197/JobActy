@@ -12,6 +12,7 @@
         <header class="mb-8 text-center">
             <h1 class="text-4xl font-bold text-gray-800 mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Pilot Monitoring Dashboard</h1>
             <p class="text-gray-600 text-lg">Real-time monitoring of pilot activities</p>
+            <p id="totalData" class="text-gray-600 text-md mt-2">Loading total data...</p>
         </header>
 
         <div class="bg-white shadow-md rounded-lg overflow-hidden">
@@ -39,21 +40,29 @@
                     header: true,
                     complete: function(results) {
                         const data = results.data;
+                        document.getElementById('totalData').textContent = `Total Data: ${data.length}`;
                         const container = document.getElementById('timelineContainer');
                         const select = document.getElementById('branchSelect');
                         const branches = new Set();
+                        const branchCounts = {};
                         
                         data.forEach(row => {
                             if (row.name_branch) {
                                 branches.add(row.name_branch);
+                                branchCounts[row.name_branch] = (branchCounts[row.name_branch] || 0) + 1;
                             }
                         });
                         
                         // Populate select
+                        const allOption = document.createElement('option');
+                        allOption.value = 'all';
+                        allOption.textContent = `All Branches (${data.length})`;
+                        select.appendChild(allOption);
+                        
                         Array.from(branches).sort().forEach(branch => {
                             const option = document.createElement('option');
                             option.value = branch;
-                            option.textContent = branch;
+                            option.textContent = `${branch} (${branchCounts[branch]})`;
                             select.appendChild(option);
                         });
                         
