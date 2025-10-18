@@ -52,6 +52,7 @@ headers = {
 desired_columns = [
     'data.id_order_header',
     'data.ppkb_description.id_ppkb_ppkb.id_pkk_pkk.no_pkk_inaportnet',
+    'data.id_pilot_type',
     'data.pilot_request_time',
     'data.approval_date',
     'data.integration_data.integration.no_spk_pandu',
@@ -73,16 +74,13 @@ desired_columns = [
     'data.trx_order_pilots.pilot_onboard',
     'data.trx_order_pilots.pilot_start',
     'data.trx_order_pilots.pilot_end',
-    'data.trx_order_pilots.pilot_off',
-    'data.company_name',
-    'data.movement_type',
-    'data.tug_name',
-    'data.type_name'
+    'data.trx_order_pilots.pilot_off'
 ]
 
 simple_names = [
     'id_order_header',
     'no_pkk_inaportnet',
+    'id_pilot_type',
     'pilot_request_time',
     'approval_date',
     'no_spk_pandu',
@@ -104,44 +102,36 @@ simple_names = [
     'pilot_onboard',
     'pilot_start',
     'pilot_end',
-    'pilot_off',
-    'company_name',
-    'movement_type',
-    'tug_name',
-    'type_name'
+    'pilot_off'
 ]
 
 if not os.path.exists("job.csv"):
     pd.DataFrame(columns=simple_names).to_csv("job.csv", index=False)
 
-# Load existing IDs to avoid duplicates
-existing_ids = set()
+# Hapus job.csv lama untuk memulai fresh setiap eksekusi
 if os.path.exists("job.csv"):
-    try:
-        existing_df = pd.read_csv("job.csv")
-        existing_ids = set(existing_df['id_order_header'].dropna().astype(int))
-        print(f"Loaded {len(existing_ids)} existing IDs from job.csv")
-    except Exception as e:
-        print(f"Error loading existing IDs: {e}")
-        existing_ids = set()
+    os.remove("job.csv")
+    print("Menghapus job.csv lama untuk memulai fresh.")
+    pd.DataFrame(columns=simple_names).to_csv("job.csv", index=False)
+
+# Load existing IDs hanya untuk dedupe in-memory selama run ini (kosong karena fresh)
+existing_ids = set()
 
 # Daftar order IDs untuk diambil (mulai dari ID rendah dan ambil sampai tidak ada data)
 start_id_file = 'last_id.txt'
-if os.path.exists(start_id_file):
-    with open(start_id_file, 'r') as f:
-        start_id = int(f.read().strip())
-else:
-    start_id = 2011000
+start_id = 2011000  # Selalu mulai dari awal untuk mendapatkan data terbaru
+with open(start_id_file, 'w') as f:
+    f.write(str(start_id))  # Update last_id.txt ke 2011000
 current_id = start_id
 consecutive_failures = 0
-max_consecutive_failures = 500
+max_consecutive_failures = 15
 max_attempts = 1000000
 counter = 0
 all_data = []
 batch_size = 50
 batch_count = 0
 
-while counter < max_attempts and consecutive_failures < max_consecutive_failures and current_id <= 2011250:
+while counter < max_attempts and consecutive_failures < max_consecutive_failures:
     counter += 1
     print(f"Processing ID: {current_id}")
     url = f"https://phinnisi.pelindo.co.id:9018/api/jobactivities/detail-order/{current_id}"
@@ -165,9 +155,12 @@ while counter < max_attempts and consecutive_failures < max_consecutive_failures
         if data and 'data' in data and data['data']:
             # Normalisasi data JSON langsung
             df = pd.json_normalize(data)
-            available_columns = [col for col in desired_columns if col in df.columns]
-            df = df[available_columns]
-            rename_dict = {old: new for old, new in zip(available_columns, simple_names[:len(available_columns)])}
+            # Add missing columns with None
+            for col in desired_columns:
+                if col not in df.columns:
+                    df[col] = None
+            df = df[desired_columns]
+            rename_dict = dict(zip(desired_columns, simple_names))
             df.rename(columns=rename_dict, inplace=True)
             
             # Check for duplicates
