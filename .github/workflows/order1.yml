@@ -1,8 +1,8 @@
-name: Run order1.py every 2 hours
+name: Run order1.py every hour
 
 on:
   schedule:
-    - cron: '0 */2 * * *'  # every 2 hours
+    - cron: '0 * * * *'  # every hour
   workflow_dispatch:
 
 permissions:
