@@ -13,6 +13,7 @@
             <h1 class="text-4xl font-bold text-gray-800 mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Pilot Monitoring Dashboard</h1>
             <p class="text-gray-600 text-lg">Real-time monitoring of pilot activities</p>
             <p id="totalData" class="text-gray-600 text-md mt-2">Loading total data...</p>
+            <p id="totalDelay" class="text-red-600 text-md mt-1">Loading total delay...</p>
         </header>
 
         <div class="bg-white shadow-md rounded-lg overflow-hidden">
@@ -41,6 +42,7 @@
                     complete: function(results) {
                         const data = results.data;
                         document.getElementById('totalData').textContent = `Total Data: ${data.length}`;
+                        let delayCount = 0;
                         const container = document.getElementById('timelineContainer');
                         const select = document.getElementById('branchSelect');
                         const branches = new Set();
@@ -187,10 +189,13 @@
                                 delayDiv.className = 'mt-4 p-2 bg-yellow-200 text-yellow-800 rounded text-center font-semibold';
                                 delayDiv.textContent = 'Delay';
                                 card.appendChild(delayDiv);
+                                delayCount++;
                             }
                             
                             container.appendChild(card);
                         });
+                        
+                        document.getElementById('totalDelay').textContent = `Total Kapal Delay: ${delayCount}`;
                         
                         // Filter function
                         function filterCards() {
