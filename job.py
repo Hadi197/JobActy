@@ -79,6 +79,8 @@ headers = {
 # Pilih hanya kolom yang diinginkan
 desired_columns = [
     'data.id_order_header',
+    'data.order_no',
+    'data.type_name',
     'data.ppkb_description.id_ppkb_ppkb.id_pkk_pkk.no_pkk_inaportnet',
     'data.id_pilot_type',
     'data.pilot_request_time',
@@ -107,6 +109,8 @@ desired_columns = [
 
 simple_names = [
     'id_order_header',
+    'order_no',
+    'type_name',
     'no_pkk_inaportnet',
     'id_pilot_type',
     'pilot_request_time',
