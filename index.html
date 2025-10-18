@@ -6,33 +6,138 @@
     <title>Pilot Monitoring Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        /* subtle gradient line for timelines */
+        .timeline-line { background: linear-gradient(90deg, rgba(99,102,241,0.15), rgba(96,165,250,0.15)); }
+        .card-hover:hover { transform: translateY(-6px); box-shadow: 0 12px 30px rgba(16,24,40,0.08); }
+        /* prevent horizontal scrollbar jump on small timelines */
+        .timeline-scroll { -webkit-overflow-scrolling: touch; }
+                        /* lightweight aqua/harbor theme variables */
+                :root {
+                    --harbor-50: #f0f9ff;
+                    --harbor-100: #e0f2fe;
+                    --harbor-200: #bae6fd;
+                    --harbor-300: #7dd3fc;
+                    --harbor-400: #38bdf8;
+                    --harbor-500: #0ea5e9;
+                    --harbor-accent: #60a5fa;
+                    --harbor-rose: #fb7185;
+                    --harbor-amber: #f59e0b;
+                }
+                .harbor-bg { background: var(--harbor-50); }
+                .harbor-accent { background: linear-gradient(180deg, var(--harbor-400), var(--harbor-300)); }
+                .harbor-text { color: var(--harbor-500); }
+                        /* Pleasant page background and cards */
+                        body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+                        .page-gradient { background: linear-gradient(180deg, #f7fbff 0%, #eef9ff 50%, #f7fbff 100%); }
+                        .decor-wave { position: absolute; left: 0; right: 0; height: 140px; top: 0; pointer-events: none; opacity: 0.9; }
+                        .card-soft { background: rgba(255,255,255,0.9); box-shadow: 0 8px 24px rgba(13, 38, 59, 0.06); border: 1px solid rgba(15, 23, 42, 0.03); }
+                        .stat-value { letter-spacing: -0.02em; }
+                    /* decorative bubbles */
+                    .bubble { position: absolute; border-radius: 9999px; opacity: 0.12; filter: blur(12px); transform: translateZ(0); }
+                    .bubble--one { width: 220px; height: 220px; left: -40px; top: 60px; background: var(--harbor-accent); }
+                    .bubble--two { width: 140px; height: 140px; right: -20px; top: 180px; background: #cfeefd; }
+                    .badge-header { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; background: linear-gradient(90deg,#e6f7ff,#dbeefe); color: #0369a1; font-weight:600; }
+                    .glass { backdrop-filter: blur(6px); }
+                    .stat-icon { background: linear-gradient(135deg,var(--harbor-400),var(--harbor-300)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+                    .card-entrance { transform: translateY(8px); opacity: 0; animation: entrance 420ms cubic-bezier(.2,.9,.2,1) forwards; }
+                    @keyframes entrance { to { transform: none; opacity: 1; } }
+                /* ship silhouette */
+                .ship-silhouette { position: absolute; left: 4%; bottom: 4%; width: 520px; height: auto; opacity: 0.06; filter: blur(6px) saturate(0.9); pointer-events: none; transform: translateZ(0); }
+        /* delay styles */
+        .delay-card { background: linear-gradient(180deg, rgba(251,113,133,0.06), rgba(255,245,247,0.03)); border: 1px solid rgba(251,113,133,0.18); }
+        .delay-badge { background: var(--harbor-rose); color: white; border: none; }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 font-sans min-h-screen">
-    <div class="container mx-auto px-4 py-8">
-        <header class="mb-8 text-center">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Pilot Monitoring Dashboard</h1>
-            <p class="text-gray-600 text-lg">Real-time monitoring of pilot activities</p>
-        </header>
+<body class="harbor-bg min-h-screen page-gradient relative overflow-x-hidden">
+        <svg class="decor-wave" viewBox="0 0 1440 320" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#e6f7ff" d="M0,64L48,80C96,96,192,128,288,165.3C384,203,480,245,576,234.7C672,224,768,160,864,141.3C960,123,1056,149,1152,176C1248,203,1344,229,1392,242.7L1440,256L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
+        </svg>
+        <div class="container mx-auto px-4 py-12 max-w-7xl relative">
+        <!-- Header -->
+        <div class="text-center mb-8 relative">
+            <div class="bubble bubble--one"></div>
+            <div class="bubble bubble--two"></div>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
+                Pilot Monitoring Dashboard
+            </h1>
+            <p class="text-md md:text-lg text-gray-600 max-w-3xl mx-auto">
+                Real-time monitoring of pilot activities
+            </p>
+        </div>
 
-        <div class="bg-white shadow-md rounded-lg overflow-hidden">
-            <div class="px-6 py-4 bg-blue-50 border-b border-gray-200">
-                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                    <div class="flex space-x-6 text-sm font-semibold">
-                        <p id="totalDataTop">Loading total data...</p>
-                        <p id="totalDelayTop" class="text-red-600">Loading total delay...</p>
-                        <p id="totalShortApproachTop" class="text-orange-600">Loading approach time...</p>
+        <!-- Stats Cards (harbor themed) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6 mt-4">
+            <!-- Card 1: Total Data -->
+            <div class="relative rounded-lg p-1 ring-0 card-hover overflow-hidden glass card-entrance">
+                <div class="absolute left-0 top-0 bottom-0 w-1 rounded-tr-lg rounded-br-lg harbor-accent"></div>
+                <div class="flex items-center gap-1 ml-1">
+                        <div class="flex-shrink-0 p-0.5 rounded-full" style="background:var(--harbor-50)">
+                        <svg class="w-2.5 h-2.5 harbor-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3v18h18"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 13l4-4 4 4 6-6"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-gray-500">Total Data</p>
+                        <p id="totalDataTop" class="text-sm md:text-base lg:text-lg font-extrabold text-gray-900">0</p>
                     </div>
                 </div>
             </div>
-            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-                <h2 class="text-xl font-semibold text-gray-800">Pilot Activity Timelines</h2>
-                <div class="flex space-x-4">
-                    <select id="branchSelect" class="px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option value="all">All Branches</option>
-                    </select>
-                    <input type="text" id="vesselSearch" placeholder="Search Vessel..." class="px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+
+            <!-- Card 2: Total Kapal Delay -->
+            <div class="relative rounded-lg p-1 ring-0 card-hover overflow-hidden glass card-entrance">
+                <div class="absolute left-0 top-0 bottom-0 w-1 rounded-tr-lg rounded-br-lg" style="background:linear-gradient(180deg,var(--harbor-rose),#fecaca)"></div>
+                <div class="flex items-center gap-1 ml-1">
+                        <div class="flex-shrink-0 p-0.5 rounded-full" style="background:#fff1f2">
+                        <svg class="w-2.5 h-2.5" style="color:var(--harbor-rose)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v4m0 4h.01"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-gray-500">Total Kapal Delay</p>
+                        <p id="totalDelayTop" class="text-sm md:text-base lg:text-lg font-extrabold text-rose-600">0</p>
+                    </div>
                 </div>
             </div>
+
+            <!-- Card 3: Approach Time <30min -->
+            <div class="relative rounded-lg p-1 ring-0 card-hover overflow-hidden glass card-entrance">
+                <div class="absolute left-0 top-0 bottom-0 w-1 rounded-tr-lg rounded-br-lg" style="background:linear-gradient(180deg,var(--harbor-amber),#fef3c7)"></div>
+                <div class="flex items-center gap-1 ml-1">
+                        <div class="flex-shrink-0 p-0.5 rounded-full" style="background:#fffbeb">
+                        <svg class="w-2.5 h-2.5" style="color:var(--harbor-amber)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-gray-500">Approach Time &lt; 30min</p>
+                        <p id="totalShortApproachTop" class="text-sm md:text-base lg:text-lg font-extrabold text-amber-600">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+    <div class="card-soft rounded-xl overflow-hidden">
+            <!-- Filters Header -->
+            <div class="px-6 py-4 border-b border-gray-100">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <h2 class="text-2xl font-semibold text-gray-800">Pilot Activity Timelines</h2>
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <select id="branchSelect" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                                <option value="all">All Branches</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        </div>
+                        <div class="relative">
+                            <input type="text" id="vesselSearch" placeholder="Search Vessel..." class="bg-white border border-gray-200 rounded-lg px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline Container -->
             <div id="timelineContainer" class="p-6 space-y-6">
                 <!-- Cards will be populated here -->
             </div>
@@ -78,16 +183,16 @@
                         
                         data.forEach(row => {
                             const card = document.createElement('div');
-                            card.className = 'bg-white shadow-lg hover:shadow-xl rounded-xl p-6 transition-shadow duration-300 border border-gray-200 hover:border-indigo-300';
+                            card.className = 'bg-white rounded-xl shadow-md card-hover p-6 border border-gray-200 transition-all duration-300';
                             card.setAttribute('data-branch', row.name_branch || '');
                             card.setAttribute('data-vessel', row.vessel_name || '');
                             
                             const header = document.createElement('h3');
-                            header.className = 'text-xl font-semibold text-gray-800 mb-4 flex items-center justify-between';
+                            header.className = 'text-lg font-semibold text-gray-800 mb-3 flex items-center justify-between';
                             header.innerHTML = `
-                                <span class="text-lg text-gray-600">${row.vessel_name || 'N/A'}</span>
-                                <span class="flex items-center">
-                                    <svg class="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <span class="text-sm md:text-base text-gray-600">${row.vessel_name || 'N/A'}</span>
+                                <span class="flex items-center text-sm">
+                                    <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
                                     </svg>
                                     Order ID: ${row.id_order_header || 'N/A'}
@@ -101,7 +206,7 @@
                             card.appendChild(branchDiv);
                             
                             const details = document.createElement('div');
-                            details.className = 'grid grid-cols-2 gap-4 mb-6 text-sm bg-gray-50 p-4 rounded-lg';
+                            details.className = 'grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 text-xs md:text-sm bg-gray-50 p-3 rounded-lg border';
                             
                             const requestTime = document.createElement('div');
                             requestTime.innerHTML = `<strong class="text-indigo-700">Pilot Request Time:</strong> ${row.pilot_request_time ? new Date(row.pilot_request_time).toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'N/A'}`;
@@ -130,7 +235,7 @@
                             
                             // Add connecting line
                             const line = document.createElement('div');
-                            line.className = 'absolute top-8 left-8 right-8 h-0.5 bg-indigo-300 z-0';
+                            line.className = 'absolute top-8 left-8 right-8 h-0.5 timeline-line z-0';
                             timeline.appendChild(line);
                             
                             const steps = [
@@ -159,7 +264,7 @@
                                     if ((step.label === 'Pilot Start' || step.label === 'Pilot End') && isShortDuration) {
                                         bgColor = 'bg-red-500';
                                     } else {
-                                        bgColor = 'bg-green-500';
+                                        bgColor = 'bg-blue-500';
                                     }
                                 }
                                 icon.className = `w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md ${bgColor}`;
@@ -171,12 +276,12 @@
                                 stepDiv.appendChild(icon);
                                 
                                 const label = document.createElement('div');
-                                label.className = 'text-xs text-gray-700 mt-2 text-center font-medium';
+                                label.className = 'text-[11px] text-gray-700 mt-2 text-center font-medium';
                                 label.textContent = step.label;
                                 stepDiv.appendChild(label);
                                 
                                 const time = document.createElement('div');
-                                time.className = 'text-xs text-gray-600 mt-1 text-center bg-white px-2 py-1 rounded shadow-sm';
+                                time.className = 'text-[11px] text-gray-600 mt-1 text-center bg-white px-2 py-1 rounded shadow-sm';
                                 if (step.time) {
                                     const date = new Date(step.time);
                                     time.textContent = date.toLocaleString('id-ID', { 
@@ -207,10 +312,11 @@
                             const reqTime = row.pilot_request_time ? new Date(row.pilot_request_time) : null;
                             const deployTime = row.pilot_deploy ? new Date(row.pilot_deploy) : null;
                             if (reqTime && reqTime < now && !deployTime) {
-                                card.className += ' bg-yellow-100 border-yellow-300';
+                                // mark card visually as delayed using harbor delay styles
+                                card.classList.add('delay-card');
                                 const delayDiv = document.createElement('div');
-                                delayDiv.className = 'mt-4 p-2 bg-yellow-200 text-yellow-800 rounded text-center font-semibold';
-                                delayDiv.textContent = 'Delay';
+                                delayDiv.className = 'mt-4 p-3 rounded-lg text-center font-semibold delay-badge';
+                                delayDiv.textContent = '🚨 DELAY DETECTED';
                                 card.appendChild(delayDiv);
                                 delayCount++;
                             }
@@ -249,5 +355,13 @@
                 document.getElementById('timelineContainer').innerHTML = '<p class="text-center text-gray-500">Error loading data</p>';
             });
     </script>
+        <!-- subtle ship silhouette for background ambiance -->
+        <svg class="ship-silhouette" viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <g fill="#083344">
+                <path d="M10 120 C80 80, 220 60, 320 80 C420 100, 540 110, 760 90 L740 130 L60 130 Z"/>
+                <path d="M160 70 L200 40 L250 60 L220 80 Z"/>
+                <rect x="340" y="40" width="16" height="48" />
+            </g>
+        </svg>
 </body>
 </html>
