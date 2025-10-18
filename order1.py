@@ -5,6 +5,7 @@ import brotli
 import json
 import datetime
 import os
+import pytz
 
 # API URL
 url = "https://phinnisi.pelindo.co.id:9018/api/executing/spk-pilot"
@@ -66,6 +67,7 @@ desired_columns = [
     'data.ppkb_guide.estimated_end_time',
     'data.ppkb_guide.guide_request_hours_change',
     'data.request_time',
+    'data.timezone_name',
     'data.trx_order_pilots.pilot_deploy',
     'data.trx_order_pilots.pilot_arrive',
     'data.trx_order_pilots.pilot_onboard',
@@ -96,6 +98,7 @@ simple_names = [
     'estimated_end_time',
     'guide_request_hours_change',
     'request_time',
+    'timezone_name',
     'pilot_deploy',
     'pilot_arrive',
     'pilot_onboard',
@@ -195,6 +198,29 @@ if os.path.exists('job1.csv'):
                     rename_dict = dict(zip(desired_columns, simple_names))
                     df.rename(columns=rename_dict, inplace=True)
                     df['id_order_header'] = order_id
+                    
+                    # Adjust times based on timezone_name
+                    time_columns = ['pilot_request_time', 'approval_date', 'pilot_date', 'estimated_start_time', 'estimated_end_time', 'guide_request_hours_change', 'request_time', 'pilot_deploy', 'pilot_arrive', 'pilot_onboard', 'pilot_start', 'pilot_end', 'pilot_off']
+                    
+                    # Map timezone abbreviations to pytz timezone names
+                    timezone_map = {
+                        'WIB': 'Asia/Jakarta',
+                        'WITA': 'Asia/Makassar',
+                        'WIT': 'Asia/Jayapura'
+                    }
+                    
+                    if 'timezone_name' in df.columns and not df['timezone_name'].isna().all():
+                        tz_abbr = df['timezone_name'].iloc[0]
+                        tz_name = timezone_map.get(tz_abbr, tz_abbr)  # fallback to original if not mapped
+                        try:
+                            tz = pytz.timezone(tz_name)
+                            for col in time_columns:
+                                if col in df.columns and not df[col].isna().all():
+                                    # Assume times are naive and in the specified timezone
+                                    df[col] = pd.to_datetime(df[col], errors='coerce').dt.tz_localize(tz).dt.tz_convert('UTC')
+                        except Exception as e:
+                            print(f"Timezone conversion failed for {tz_name}: {e}")
+                    
                     all_detail_data.append(df)
                     print(f"Details fetched for order ID: {order_id}")
                 else:
