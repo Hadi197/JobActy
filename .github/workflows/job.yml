@@ -79,9 +79,9 @@ jobs:
           echo "⚠️ No changes detected — forcing timestamp update"
           echo "$(date)" >> .timestamp
           git add .timestamp
-          git commit -m "Force update timestamp to trigger commit [skip ci]"
+          git commit -m "Force update timestamp to trigger commit"
         else
-          git commit -m "Update job.csv and last_id.txt [skip ci]"
+          git commit -m "Update job.csv and last_id.txt"
         fi
 
         echo "=== Push to main ==="
