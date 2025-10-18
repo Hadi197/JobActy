@@ -105,7 +105,7 @@
                         <svg class="w-2.5 h-2.5" style="color:var(--harbor-amber)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3"/></svg>
                     </div>
                     <div>
-                        <p class="text-[10px] text-gray-500">Approach Time &lt; 30min</p>
+                        <p class="text-[10px] text-gray-500">Approach Time &lt; 10min</p>
                         <p id="totalShortApproachTop" class="text-sm md:text-base lg:text-lg font-extrabold text-amber-600">0</p>
                     </div>
                 </div>
@@ -250,7 +250,7 @@
                             // Check if Pilot Start to Pilot End duration < 30 minutes
                             const pilotStartTime = row.pilot_start ? new Date(row.pilot_start) : null;
                             const pilotEndTime = row.pilot_end ? new Date(row.pilot_end) : null;
-                            const isShortDuration = pilotStartTime && pilotEndTime && (pilotEndTime - pilotStartTime) < 30 * 60 * 1000;
+                            const isShortDuration = pilotStartTime && pilotEndTime && (pilotEndTime - pilotStartTime) < 10 * 60 * 1000;
                             if (isShortDuration) shortApproachCount++;
                             
                             steps.forEach((step, index) => {
@@ -325,7 +325,7 @@
                         });
                         
                         document.getElementById('totalDelayTop').textContent = `Total Kapal Delay: ${delayCount}`;
-                        document.getElementById('totalShortApproachTop').textContent = `Approach Time Kurang dari 30 menit = ${shortApproachCount}`;
+                        document.getElementById('totalShortApproachTop').textContent = `Approach Time Kurang dari 10 menit = ${shortApproachCount}`;
                         
                         // Filter function
                         function filterCards() {
