@@ -371,6 +371,8 @@
             row.className = 'table-row border-b-2 border-blue-200 hover:shadow-lg transition-all duration-300';
 
             const vessel = activity.vessel_name || activity.order_no || 'N/A';
+            const branch = activity.name_branch || '';
+            const vesselWithBranch = branch ? `${vessel} (${branch})` : vessel;
             const agen = activity.company_name || '-';
             const gerakan = activity.location_name || '-';
 
@@ -418,9 +420,12 @@
 
             row.innerHTML = `
                 <td class="px-6 py-4 text-sm font-semibold text-gray-900 text-center bg-white/60 backdrop-blur-sm">
-                    <div class="flex items-center justify-center space-x-2">
+                    <div class="flex flex-col items-center justify-center space-y-1">
                         <div class="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"></div>
-                        <span>${vessel}</span>
+                        <div class="text-center">
+                            <div class="text-base font-bold text-gray-900">${vessel}</div>
+                            ${branch ? `<div class="text-xs text-gray-600 font-medium">${branch}</div>` : ''}
+                        </div>
                     </div>
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-700 break-words bg-white/40 backdrop-blur-sm">
