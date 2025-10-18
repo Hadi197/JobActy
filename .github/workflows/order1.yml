@@ -48,6 +48,7 @@ jobs:
         set -e
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git pull https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git main --no-edit || true
         git add -f job1.csv job.csv last_id.txt || true
         if git diff --staged --quiet; then
           echo "No changes to commit"
