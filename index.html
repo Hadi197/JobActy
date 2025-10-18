@@ -62,6 +62,10 @@
         .filter-input-wrapper { position: relative; }
         .filter-input-wrapper .search-icon { position: absolute; left: 0.65rem; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
         .filter-input { padding-left: 2.6rem; }
+        .dropdown-option { padding: 0.5rem 0.75rem; cursor: pointer; transition: background-color 0.15s; }
+        .dropdown-option:hover { background-color: #f3f4f6; }
+        .chev { position: absolute; right: 0.65rem; top: 50%; transform: translateY(-50%); pointer-events: none; color: #94a3b8; transition: transform 0.2s; }
+        .filter-control .chev.rotate { transform: translateY(-50%) rotate(180deg); }
     </style>
 </head>
 <body class="harbor-bg min-h-screen page-gradient relative overflow-x-hidden">
@@ -127,7 +131,7 @@
         </div>
 
         <!-- Main Content -->
-    <div class="card-soft rounded-xl overflow-hidden">
+    <div class="card-soft rounded-xl">
             <!-- Filters Header -->
             <div class="px-6 py-4 border-b border-gray-100" style="background: linear-gradient(135deg, var(--harbor-50), var(--harbor-100));">
                 <div class="text-center mb-4">
@@ -137,21 +141,27 @@
                     <div class="filters-grid w-full max-w-4xl">
                         <div class="filter-control">
                             <label for="branchSelect" class="sr-only">Branch</label>
-                            <select id="branchSelect" class="filter-select">
-                                <option value="all">All Branches</option>
-                            </select>
-                            <div class="chev">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <div class="relative">
+                                <input type="text" id="branchSelect" placeholder="Search Branches..." class="filter-input pr-10" autocomplete="off">
+                                <div class="chev">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                                <div id="branchDropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto hidden">
+                                    <!-- Options will be populated here -->
+                                </div>
                             </div>
                         </div>
 
                         <div class="filter-control">
                             <label for="companySelect" class="sr-only">Company</label>
-                            <select id="companySelect" class="filter-select">
-                                <option value="all">All Companies</option>
-                            </select>
-                            <div class="chev">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <div class="relative">
+                                <input type="text" id="companySelect" placeholder="Search Companies..." class="filter-input pr-10" autocomplete="off">
+                                <div class="chev">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                                <div id="companyDropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto hidden">
+                                    <!-- Options will be populated here -->
+                                </div>
                             </div>
                         </div>
 
@@ -186,8 +196,10 @@
                         let delayCount = 0;
                         let shortApproachCount = 0;
                         const container = document.getElementById('timelineContainer');
-                        const select = document.getElementById('branchSelect');
-                        const companySelect = document.getElementById('companySelect');
+                        const branchInput = document.getElementById('branchSelect');
+                        const companyInput = document.getElementById('companySelect');
+                        const branchDropdown = document.getElementById('branchDropdown');
+                        const companyDropdown = document.getElementById('companyDropdown');
                         const branches = new Set();
                         const companies = new Set();
                         const branchCounts = {};
@@ -195,46 +207,143 @@
                         
                         data.forEach(row => {
                             if (row.name_branch) {
-                                branches.add(row.name_branch);
-                                branchCounts[row.name_branch] = (branchCounts[row.name_branch] || 0) + 1;
+                                const branch = row.name_branch.trim();
+                                branches.add(branch);
+                                branchCounts[branch] = (branchCounts[branch] || 0) + 1;
                             }
                             if (row.company_name) {
-                                companies.add(row.company_name);
-                                companyCounts[row.company_name] = (companyCounts[row.company_name] || 0) + 1;
+                                const company = row.company_name.trim();
+                                companies.add(company);
+                                companyCounts[company] = (companyCounts[company] || 0) + 1;
                             }
                         });
                         
-                        // Populate branch select
-                        const allBranchOption = document.createElement('option');
-                        allBranchOption.value = 'all';
-                        allBranchOption.textContent = `All Branches (${data.length})`;
-                        select.appendChild(allBranchOption);
+                        // Store data for filtering
+                        const branchData = Array.from(branches).sort();
+                        const companyData = Array.from(companies).sort();
                         
-                        Array.from(branches).sort().forEach(branch => {
-                            const option = document.createElement('option');
-                            option.value = branch;
-                            option.textContent = `${branch} (${branchCounts[branch]})`;
-                            select.appendChild(option);
+                        // Function to render dropdown options
+                        function renderDropdown(dropdown, data, counts, searchTerm = '') {
+                            dropdown.innerHTML = '';
+                            const filteredData = data.filter(item => 
+                                item.toLowerCase().includes(searchTerm.toLowerCase())
+                            );
+                            
+                            // Add "All" option first (only if no search term or if "all" matches)
+                            if (!searchTerm || 'all'.includes(searchTerm.toLowerCase())) {
+                                const allOption = document.createElement('div');
+                                allOption.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm font-medium';
+                                allOption.textContent = `All (${data.length})`;
+                                allOption.dataset.value = 'all';
+                                dropdown.appendChild(allOption);
+                            }
+                            
+                            // Add filtered options
+                            filteredData.forEach(item => {
+                                const option = document.createElement('div');
+                                option.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm';
+                                option.textContent = `${item} (${counts[item]})`;
+                                option.dataset.value = item;
+                                dropdown.appendChild(option);
+                            });
+                            
+                            // Show "No results" if no matches
+                            if (filteredData.length === 0 && searchTerm && !'all'.includes(searchTerm.toLowerCase())) {
+                                const noResult = document.createElement('div');
+                                noResult.className = 'px-3 py-2 text-sm text-gray-500';
+                                noResult.textContent = 'No results found';
+                                dropdown.appendChild(noResult);
+                            }
+                        }
+                        
+                        // Initialize dropdowns
+                        renderDropdown(branchDropdown, branchData, branchCounts);
+                        renderDropdown(companyDropdown, companyData, companyCounts);
+                        
+                        // Handle input focus
+                        branchInput.addEventListener('focus', () => {
+                            const currentValue = branchInput.dataset.value;
+                            if (currentValue === 'all') {
+                                branchInput.value = '';
+                            }
+                            renderDropdown(branchDropdown, branchData, branchCounts, branchInput.value);
+                            branchDropdown.classList.remove('hidden');
+                            branchInput.nextElementSibling.classList.add('rotate');
+                            companyDropdown.classList.add('hidden');
+                            companyInput.nextElementSibling.classList.remove('rotate');
                         });
-
-                        // Populate company select
-                        const allCompanyOption = document.createElement('option');
-                        allCompanyOption.value = 'all';
-                        allCompanyOption.textContent = `All Companies (${data.length})`;
-                        companySelect.appendChild(allCompanyOption);
                         
-                        Array.from(companies).sort().forEach(company => {
-                            const option = document.createElement('option');
-                            option.value = company;
-                            option.textContent = `${company} (${companyCounts[company]})`;
-                            companySelect.appendChild(option);
+                        companyInput.addEventListener('focus', () => {
+                            const currentValue = companyInput.dataset.value;
+                            if (currentValue === 'all') {
+                                companyInput.value = '';
+                            }
+                            renderDropdown(companyDropdown, companyData, companyCounts, companyInput.value);
+                            companyDropdown.classList.remove('hidden');
+                            companyInput.nextElementSibling.classList.add('rotate');
+                            branchDropdown.classList.add('hidden');
+                            branchInput.nextElementSibling.classList.remove('rotate');
+                        });
+                        
+                        // Handle input changes
+                        branchInput.addEventListener('input', (e) => {
+                            renderDropdown(branchDropdown, branchData, branchCounts, e.target.value);
+                            branchDropdown.classList.remove('hidden');
+                            branchInput.nextElementSibling.classList.add('rotate');
+                        });
+                        
+                        companyInput.addEventListener('input', (e) => {
+                            renderDropdown(companyDropdown, companyData, companyCounts, e.target.value);
+                            companyDropdown.classList.remove('hidden');
+                            companyInput.nextElementSibling.classList.add('rotate');
+                        });
+                        
+                        // Handle dropdown selection
+                        branchDropdown.addEventListener('click', (e) => {
+                            if (e.target.dataset.value) {
+                                const selectedValue = e.target.dataset.value;
+                                branchInput.dataset.value = selectedValue;
+                                if (selectedValue === 'all') {
+                                    branchInput.value = `All Branches (${branchData.length})`;
+                                } else {
+                                    branchInput.value = e.target.textContent;
+                                }
+                                branchDropdown.classList.add('hidden');
+                                branchInput.nextElementSibling.classList.remove('rotate');
+                                filterCards();
+                            }
+                        });
+                        
+                        companyDropdown.addEventListener('click', (e) => {
+                            if (e.target.dataset.value) {
+                                const selectedValue = e.target.dataset.value;
+                                companyInput.dataset.value = selectedValue;
+                                if (selectedValue === 'all') {
+                                    companyInput.value = `All Companies (${companyData.length})`;
+                                } else {
+                                    companyInput.value = e.target.textContent;
+                                }
+                                companyDropdown.classList.add('hidden');
+                                companyInput.nextElementSibling.classList.remove('rotate');
+                                filterCards();
+                            }
+                        });
+                        
+                        // Close dropdowns when clicking outside
+                        document.addEventListener('click', (e) => {
+                            if (!e.target.closest('.filter-control')) {
+                                branchDropdown.classList.add('hidden');
+                                companyDropdown.classList.add('hidden');
+                                branchInput.nextElementSibling.classList.remove('rotate');
+                                companyInput.nextElementSibling.classList.remove('rotate');
+                            }
                         });
                         
                         data.forEach(row => {
                             const card = document.createElement('div');
                             card.className = 'bg-white rounded-xl shadow-md card-hover p-6 border border-gray-200 transition-all duration-300';
-                            card.setAttribute('data-branch', row.name_branch || '');
-                            card.setAttribute('data-company', row.company_name || '');
+                            card.setAttribute('data-branch', (row.name_branch || '').trim());
+                            card.setAttribute('data-company', (row.company_name || '').trim());
                             card.setAttribute('data-vessel', row.vessel_name || '');
                             
                             const header = document.createElement('h3');
@@ -384,8 +493,8 @@
                         
                         // Filter function
                         function filterCards() {
-                            const selectedBranch = document.getElementById('branchSelect').value;
-                            const selectedCompany = document.getElementById('companySelect').value;
+                            const selectedBranch = document.getElementById('branchSelect').dataset.value || 'all';
+                            const selectedCompany = document.getElementById('companySelect').dataset.value || 'all';
                             const searchTerm = document.getElementById('vesselSearch').value.toLowerCase();
                             const cards = container.querySelectorAll('[data-branch]');
                             cards.forEach(card => {
@@ -403,8 +512,12 @@
                             });
                         }
                         
-                        select.addEventListener('change', filterCards);
-                        companySelect.addEventListener('change', filterCards);
+                        // Initial filter (show all)
+                        document.getElementById('branchSelect').dataset.value = 'all';
+                        document.getElementById('companySelect').dataset.value = 'all';
+                        document.getElementById('branchSelect').value = `All Branches (${branchData.length})`;
+                        document.getElementById('companySelect').value = `All Companies (${companyData.length})`;
+                        
                         document.getElementById('vesselSearch').addEventListener('input', filterCards);
                     }
                 });
