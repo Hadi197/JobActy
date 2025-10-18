@@ -194,6 +194,7 @@ if os.path.exists('job1.csv'):
                     df = df[desired_columns]
                     rename_dict = dict(zip(desired_columns, simple_names))
                     df.rename(columns=rename_dict, inplace=True)
+                    df['id_order_header'] = order_id
                     all_detail_data.append(df)
                     print(f"Details fetched for order ID: {order_id}")
                 else:
