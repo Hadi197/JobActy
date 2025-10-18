@@ -54,8 +54,8 @@
         /* Filters layout helpers to avoid overlap and keep proportions */
         .filters-grid { display: grid; grid-template-columns: 1fr; gap: 0.75rem; align-items: center; }
         @media (min-width: 768px) {
-            /* On tablet+ show three columns: branch, company (wider), search */
-            .filters-grid { grid-template-columns: 1fr 2fr 1fr; }
+            /* On tablet+ show five columns: branch, company, status, search, clear */
+            .filters-grid { grid-template-columns: 1fr 1fr 1fr 1fr auto; }
         }
         .filter-control { position: relative; }
         .filter-select, .filter-input { width: 100%; padding: 0.5rem 2.5rem 0.5rem 0.9rem; border-radius: 0.5rem; border: 1px solid #e6edf3; box-shadow: none; background: #ffffff; }
@@ -168,12 +168,31 @@
                             </div>
                         </div>
 
+                        <div class="filter-control">
+                            <label for="statusSelect" class="sr-only">Status</label>
+                            <div class="relative">
+                                <input type="text" id="statusSelect" placeholder="Filter by Status..." class="filter-input pr-10" autocomplete="off">
+                                <div class="chev">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                                <div id="statusDropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto hidden">
+                                    <!-- Options will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="filter-input-wrapper">
                             <label for="vesselSearch" class="sr-only">Search Vessel</label>
                             <div class="filter-input-wrapper relative">
                                 <svg class="search-icon w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                                 <input type="text" id="vesselSearch" placeholder="Search Vessel..." class="filter-input" />
                             </div>
+                        </div>
+
+                        <div class="flex items-center">
+                            <button id="clearFilters" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium rounded-md transition-colors duration-200">
+                                Clear Filters
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -202,8 +221,10 @@
                         const container = document.getElementById('timelineContainer');
                         const branchInput = document.getElementById('branchSelect');
                         const companyInput = document.getElementById('companySelect');
+                        const statusInput = document.getElementById('statusSelect');
                         const branchDropdown = document.getElementById('branchDropdown');
                         const companyDropdown = document.getElementById('companyDropdown');
+                        const statusDropdown = document.getElementById('statusDropdown');
                         const branches = new Set();
                         const companies = new Set();
                         const branchCounts = {};
@@ -225,6 +246,25 @@
                         // Store data for filtering
                         const branchData = Array.from(branches).sort();
                         const companyData = Array.from(companies).sort();
+                        const statusData = ['DELAY', 'MENDEKATI PELAYANAN', 'NORMAL'];
+                        const statusCounts = { 'DELAY': 0, 'MENDEKATI PELAYANAN': 0, 'NORMAL': 0 };
+                        
+                        const now = new Date();
+                        
+                        // Count statuses
+                        data.forEach(row => {
+                            const reqTime = row.pilot_request_time ? new Date(row.pilot_request_time) : null;
+                            const deployTime = row.pilot_deploy ? new Date(row.pilot_deploy) : null;
+                            let status = 'NORMAL';
+                            if (reqTime) {
+                                if (reqTime < now && !deployTime) {
+                                    status = 'DELAY';
+                                } else if (reqTime > now && (reqTime - now) <= 30 * 60 * 1000) {
+                                    status = 'MENDEKATI PELAYANAN';
+                                }
+                            }
+                            statusCounts[status]++;
+                        });
                         
                         // Function to render dropdown options
                         function renderDropdown(dropdown, data, counts, searchTerm = '') {
@@ -263,6 +303,7 @@
                         // Initialize dropdowns
                         renderDropdown(branchDropdown, branchData, branchCounts);
                         renderDropdown(companyDropdown, companyData, companyCounts);
+                        renderDropdown(statusDropdown, statusData, statusCounts);
                         
                         // Handle input focus
                         branchInput.addEventListener('focus', () => {
@@ -275,6 +316,8 @@
                             branchInput.nextElementSibling.classList.add('rotate');
                             companyDropdown.classList.add('hidden');
                             companyInput.nextElementSibling.classList.remove('rotate');
+                            statusDropdown.classList.add('hidden');
+                            statusInput.nextElementSibling.classList.remove('rotate');
                         });
                         
                         companyInput.addEventListener('focus', () => {
@@ -287,6 +330,22 @@
                             companyInput.nextElementSibling.classList.add('rotate');
                             branchDropdown.classList.add('hidden');
                             branchInput.nextElementSibling.classList.remove('rotate');
+                            statusDropdown.classList.add('hidden');
+                            statusInput.nextElementSibling.classList.remove('rotate');
+                        });
+                        
+                        statusInput.addEventListener('focus', () => {
+                            const currentValue = statusInput.dataset.value;
+                            if (currentValue === 'all') {
+                                statusInput.value = '';
+                            }
+                            renderDropdown(statusDropdown, statusData, statusCounts, statusInput.value);
+                            statusDropdown.classList.remove('hidden');
+                            statusInput.nextElementSibling.classList.add('rotate');
+                            branchDropdown.classList.add('hidden');
+                            branchInput.nextElementSibling.classList.remove('rotate');
+                            companyDropdown.classList.add('hidden');
+                            companyInput.nextElementSibling.classList.remove('rotate');
                         });
                         
                         // Handle input changes
@@ -300,6 +359,12 @@
                             renderDropdown(companyDropdown, companyData, companyCounts, e.target.value);
                             companyDropdown.classList.remove('hidden');
                             companyInput.nextElementSibling.classList.add('rotate');
+                        });
+                        
+                        statusInput.addEventListener('input', (e) => {
+                            renderDropdown(statusDropdown, statusData, statusCounts, e.target.value);
+                            statusDropdown.classList.remove('hidden');
+                            statusInput.nextElementSibling.classList.add('rotate');
                         });
                         
                         // Handle dropdown selection
@@ -333,13 +398,30 @@
                             }
                         });
                         
+                        statusDropdown.addEventListener('click', (e) => {
+                            if (e.target.dataset.value) {
+                                const selectedValue = e.target.dataset.value;
+                                statusInput.dataset.value = selectedValue;
+                                if (selectedValue === 'all') {
+                                    statusInput.value = `All Statuses (${statusData.length})`;
+                                } else {
+                                    statusInput.value = e.target.textContent;
+                                }
+                                statusDropdown.classList.add('hidden');
+                                statusInput.nextElementSibling.classList.remove('rotate');
+                                filterCards();
+                            }
+                        });
+                        
                         // Close dropdowns when clicking outside
                         document.addEventListener('click', (e) => {
                             if (!e.target.closest('.filter-control')) {
                                 branchDropdown.classList.add('hidden');
                                 companyDropdown.classList.add('hidden');
+                                statusDropdown.classList.add('hidden');
                                 branchInput.nextElementSibling.classList.remove('rotate');
                                 companyInput.nextElementSibling.classList.remove('rotate');
+                                statusInput.nextElementSibling.classList.remove('rotate');
                             }
                         });
                         
@@ -476,6 +558,18 @@
                             const reqTime = row.pilot_request_time ? new Date(row.pilot_request_time) : null;
                             const deployTime = row.pilot_deploy ? new Date(row.pilot_deploy) : null;
                             
+                            // Calculate status
+                            let status = 'NORMAL';
+                            if (reqTime) {
+                                if (reqTime < now && !deployTime) {
+                                    status = 'DELAY';
+                                } else if (reqTime > now && (reqTime - now) <= 30 * 60 * 1000) {
+                                    status = 'MENDEKATI PELAYANAN';
+                                }
+                            }
+                            
+                            card.setAttribute('data-status', status);
+                            
                             // Check if within 30 minutes before pilot request time
                             if (reqTime && reqTime > now && (reqTime - now) <= 30 * 60 * 1000) {
                                 card.classList.add('warning-card');
@@ -506,16 +600,19 @@
                         function filterCards() {
                             const selectedBranch = document.getElementById('branchSelect').dataset.value || 'all';
                             const selectedCompany = document.getElementById('companySelect').dataset.value || 'all';
+                            const selectedStatus = document.getElementById('statusSelect').dataset.value || 'all';
                             const searchTerm = document.getElementById('vesselSearch').value.toLowerCase();
                             const cards = container.querySelectorAll('[data-branch]');
                             cards.forEach(card => {
                                 const branch = card.getAttribute('data-branch');
                                 const company = card.getAttribute('data-company');
+                                const status = card.getAttribute('data-status');
                                 const vessel = card.getAttribute('data-vessel').toLowerCase();
                                 const branchMatch = selectedBranch === 'all' || branch === selectedBranch;
                                 const companyMatch = selectedCompany === 'all' || company === selectedCompany;
+                                const statusMatch = selectedStatus === 'all' || status === selectedStatus;
                                 const vesselMatch = !searchTerm || vessel.includes(searchTerm);
-                                if (branchMatch && companyMatch && vesselMatch) {
+                                if (branchMatch && companyMatch && statusMatch && vesselMatch) {
                                     card.style.display = 'block';
                                 } else {
                                     card.style.display = 'none';
@@ -526,10 +623,24 @@
                         // Initial filter (show all)
                         document.getElementById('branchSelect').dataset.value = 'all';
                         document.getElementById('companySelect').dataset.value = 'all';
+                        document.getElementById('statusSelect').dataset.value = 'all';
                         document.getElementById('branchSelect').value = `All Branches (${branchData.length})`;
                         document.getElementById('companySelect').value = `All Companies (${companyData.length})`;
+                        document.getElementById('statusSelect').value = `All Statuses (${statusData.length})`;
                         
                         document.getElementById('vesselSearch').addEventListener('input', filterCards);
+                        
+                        // Clear filters button
+                        document.getElementById('clearFilters').addEventListener('click', () => {
+                            document.getElementById('branchSelect').dataset.value = 'all';
+                            document.getElementById('companySelect').dataset.value = 'all';
+                            document.getElementById('statusSelect').dataset.value = 'all';
+                            document.getElementById('branchSelect').value = `All Branches (${branchData.length})`;
+                            document.getElementById('companySelect').value = `All Companies (${companyData.length})`;
+                            document.getElementById('statusSelect').value = `All Statuses (${statusData.length})`;
+                            document.getElementById('vesselSearch').value = '';
+                            filterCards();
+                        });
                     }
                 });
             })
