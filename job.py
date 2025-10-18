@@ -3,11 +3,12 @@ import json
 import pandas as pd
 import time
 import os
+import subprocess
 from datetime import datetime, timedelta
 
 
 def save_batch(batch_df, filename='job.csv'):
-    """Simpan batch ke CSV lalu langsung commit & push ke GitHub."""
+    """Simpan batch ke CSV lalu commit & push ke GitHub."""
     if batch_df.empty:
         print(f"[{datetime.now()}] ⚠️ Batch kosong, tidak disimpan.")
         return
@@ -22,24 +23,51 @@ def save_batch(batch_df, filename='job.csv'):
 
     print(f"[{datetime.now()}] ✅ Batch disimpan ({len(batch_df)} baris) ke {filename}")
 
-    # === Commit & push otomatis ke GitHub ===
     print(f"[{datetime.now()}] 🔄 Commit & push batch ke GitHub...")
 
-    commit_cmds = '''
-    git config --global user.name "github-actions[bot]"
-    git config --global user.email "github-actions[bot]@users.noreply.github.com"
-    git add -f job.csv last_id.txt
-    git commit -m "Auto commit batch at $(date '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
-    '''
+    try:
+        # Configure git
+        subprocess.run(['git', 'config', '--global', 'user.name', 'github-actions[bot]'], check=True)
+        subprocess.run(['git', 'config', '--global', 'user.email', 'github-actions[bot]@users.noreply.github.com'], check=True)
 
-    repo_url = os.environ.get('REPO_URL', '').strip()
-    if repo_url:
-        push_cmd = f"git push {repo_url} HEAD:main || echo '⚠️ Push gagal (mungkin tidak ada perubahan)'"
-    else:
-        push_cmd = "git push origin main || echo '⚠️ Push gagal (mungkin tidak ada perubahan)'"
+        # Add files
+        subprocess.run(['git', 'add', '-f', 'job.csv', 'last_id.txt'], check=True)
 
-    full_cmd = commit_cmds + "\n" + push_cmd
-    os.system(full_cmd)
+        # Commit with proper date
+        commit_msg = f"Auto commit batch at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        result = subprocess.run(['git', 'commit', '-m', commit_msg], capture_output=True, text=True)
+        if result.returncode != 0:
+            if 'nothing to commit' in result.stdout or 'nothing to commit' in result.stderr:
+                print(f"[{datetime.now()}] ⚠️ No changes to commit")
+                return
+            else:
+                print(f"[{datetime.now()}] ❌ Commit failed: {result.stderr}")
+                return
+
+        # Push
+        repo_url = os.environ.get('REPO_URL', '').strip()
+        if repo_url:
+            push_cmd = ['git', 'push', repo_url, 'HEAD:main']
+        else:
+            push_cmd = ['git', 'push', 'origin', 'main']
+
+        result = subprocess.run(push_cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"[{datetime.now()}] ⚠️ Push failed: {result.stderr}")
+            # Try pull rebase and push again
+            subprocess.run(['git', 'pull', '--rebase'], check=False)
+            result = subprocess.run(push_cmd, capture_output=True, text=True)
+            if result.returncode != 0:
+                print(f"[{datetime.now()}] ❌ Push still failed after rebase: {result.stderr}")
+            else:
+                print(f"[{datetime.now()}] ✅ Push successful after rebase")
+        else:
+            print(f"[{datetime.now()}] ✅ Push successful")
+
+    except subprocess.CalledProcessError as e:
+        print(f"[{datetime.now()}] ❌ Git command failed: {e}")
+    except Exception as e:
+        print(f"[{datetime.now()}] ❌ Unexpected error: {e}")
 
 # Header dengan access-token
 headers = {
