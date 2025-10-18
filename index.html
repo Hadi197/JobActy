@@ -86,6 +86,14 @@
             <p class="text-md md:text-lg text-gray-600 max-w-3xl mx-auto">
                 Real-time monitoring of pilot activities
             </p>
+            <div class="mt-6">
+                <button id="boardButton" class="fixed top-4 right-4 z-50 inline-flex items-center px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    BOARD
+                </button>
+            </div>
         </div>
 
         <!-- Stats Cards (harbor themed) -->
@@ -648,6 +656,11 @@
                 console.error('Error loading CSV:', error);
                 document.getElementById('timelineContainer').innerHTML = '<p class="text-center text-gray-500">Error loading data</p>';
             });
+
+        // BOARD button functionality
+        document.getElementById('boardButton').addEventListener('click', function() {
+            window.location.href = 'informasi.html';
+        });
     </script>
         <!-- subtle ship silhouette for background ambiance -->
         <svg class="ship-silhouette" viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">

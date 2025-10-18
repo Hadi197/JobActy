@@ -129,6 +129,11 @@ while True:
                 raise
     # Check if request was successful
     if response.status_code == 200:
+        if response.text.strip() == "":
+            print("Response is empty")
+            print(f"Response status: {response.status_code}")
+            print(f"Response headers: {response.headers}")
+            exit(1)
         try:
             # Try to decompress if brotli compressed
             try:
