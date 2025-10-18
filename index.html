@@ -12,11 +12,18 @@
         <header class="mb-8 text-center">
             <h1 class="text-4xl font-bold text-gray-800 mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Pilot Monitoring Dashboard</h1>
             <p class="text-gray-600 text-lg">Real-time monitoring of pilot activities</p>
-            <p id="totalData" class="text-gray-600 text-md mt-2">Loading total data...</p>
-            <p id="totalDelay" class="text-red-600 text-md mt-1">Loading total delay...</p>
         </header>
 
         <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <div class="px-6 py-4 bg-blue-50 border-b border-gray-200">
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                    <div class="flex space-x-6 text-sm font-semibold">
+                        <p id="totalDataTop">Loading total data...</p>
+                        <p id="totalDelayTop" class="text-red-600">Loading total delay...</p>
+                        <p id="totalShortApproachTop" class="text-orange-600">Loading approach time...</p>
+                    </div>
+                </div>
+            </div>
             <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
                 <h2 class="text-xl font-semibold text-gray-800">Pilot Activity Timelines</h2>
                 <div class="flex space-x-4">
@@ -41,8 +48,9 @@
                     header: true,
                     complete: function(results) {
                         const data = results.data;
-                        document.getElementById('totalData').textContent = `Total Data: ${data.length}`;
+                        document.getElementById('totalDataTop').textContent = `Total Data: ${data.length}`;
                         let delayCount = 0;
+                        let shortApproachCount = 0;
                         const container = document.getElementById('timelineContainer');
                         const select = document.getElementById('branchSelect');
                         const branches = new Set();
@@ -134,12 +142,27 @@
                                 { label: 'Pilot Off', time: row.pilot_off }
                             ];
                             
+                            // Check if Pilot Start to Pilot End duration < 30 minutes
+                            const pilotStartTime = row.pilot_start ? new Date(row.pilot_start) : null;
+                            const pilotEndTime = row.pilot_end ? new Date(row.pilot_end) : null;
+                            const isShortDuration = pilotStartTime && pilotEndTime && (pilotEndTime - pilotStartTime) < 30 * 60 * 1000;
+                            if (isShortDuration) shortApproachCount++;
+                            
                             steps.forEach((step, index) => {
                                 const stepDiv = document.createElement('div');
                                 stepDiv.className = 'flex flex-col items-center min-w-0 z-10';
                                 
                                 const icon = document.createElement('div');
-                                icon.className = `w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md ${step.time ? 'bg-green-500' : 'bg-gray-400'}`;
+                                const isCompleted = step.time ? true : false;
+                                let bgColor = 'bg-gray-400';
+                                if (isCompleted) {
+                                    if ((step.label === 'Pilot Start' || step.label === 'Pilot End') && isShortDuration) {
+                                        bgColor = 'bg-red-500';
+                                    } else {
+                                        bgColor = 'bg-green-500';
+                                    }
+                                }
+                                icon.className = `w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md ${bgColor}`;
                                 icon.innerHTML = step.time ? `
                                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
@@ -195,7 +218,8 @@
                             container.appendChild(card);
                         });
                         
-                        document.getElementById('totalDelay').textContent = `Total Kapal Delay: ${delayCount}`;
+                        document.getElementById('totalDelayTop').textContent = `Total Kapal Delay: ${delayCount}`;
+                        document.getElementById('totalShortApproachTop').textContent = `Approach Time Kurang dari 30 menit = ${shortApproachCount}`;
                         
                         // Filter function
                         function filterCards() {
