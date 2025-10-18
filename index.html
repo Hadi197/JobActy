@@ -48,6 +48,20 @@
         /* delay styles */
         .delay-card { background: linear-gradient(180deg, rgba(251,113,133,0.06), rgba(255,245,247,0.03)); border: 1px solid rgba(251,113,133,0.18); }
         .delay-badge { background: var(--harbor-rose); color: white; border: none; }
+        /* Filters layout helpers to avoid overlap and keep proportions */
+        .filters-grid { display: grid; grid-template-columns: 1fr; gap: 0.75rem; align-items: center; }
+        @media (min-width: 768px) {
+            /* On tablet+ show three columns: branch, company (wider), search */
+            .filters-grid { grid-template-columns: 1fr 2fr 1fr; }
+        }
+        .filter-control { position: relative; }
+        .filter-select, .filter-input { width: 100%; padding: 0.5rem 2.5rem 0.5rem 0.9rem; border-radius: 0.5rem; border: 1px solid #e6edf3; box-shadow: none; background: #ffffff; }
+        .filter-select:focus, .filter-input:focus { outline: none; box-shadow: 0 0 0 4px rgba(99,102,241,0.06); border-color: rgba(99,102,241,0.3); }
+        .filter-control .chev { position: absolute; right: 0.65rem; top: 50%; transform: translateY(-50%); pointer-events: none; color: #94a3b8; }
+        /* Ensure the search input icon is left-aligned without overlapping text */
+        .filter-input-wrapper { position: relative; }
+        .filter-input-wrapper .search-icon { position: absolute; left: 0.65rem; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
+        .filter-input { padding-left: 2.6rem; }
     </style>
 </head>
 <body class="harbor-bg min-h-screen page-gradient relative overflow-x-hidden">
@@ -115,22 +129,37 @@
         <!-- Main Content -->
     <div class="card-soft rounded-xl overflow-hidden">
             <!-- Filters Header -->
-            <div class="px-6 py-4 border-b border-gray-100">
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div class="px-6 py-4 border-b border-gray-100" style="background: linear-gradient(135deg, var(--harbor-50), var(--harbor-100));">
+                <div class="text-center mb-4">
                     <h2 class="text-2xl font-semibold text-gray-800">Pilot Activity Timelines</h2>
-                    <div class="flex items-center gap-3">
-                        <div class="relative">
-                            <select id="branchSelect" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                </div>
+                <div class="flex justify-center">
+                    <div class="filters-grid w-full max-w-4xl">
+                        <div class="filter-control">
+                            <label for="branchSelect" class="sr-only">Branch</label>
+                            <select id="branchSelect" class="filter-select">
                                 <option value="all">All Branches</option>
                             </select>
-                            <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <div class="chev">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </div>
                         </div>
-                        <div class="relative">
-                            <input type="text" id="vesselSearch" placeholder="Search Vessel..." class="bg-white border border-gray-200 rounded-lg px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                            <div class="absolute inset-y-0 left-0 flex items-center pl-3">
-                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+
+                        <div class="filter-control">
+                            <label for="companySelect" class="sr-only">Company</label>
+                            <select id="companySelect" class="filter-select">
+                                <option value="all">All Companies</option>
+                            </select>
+                            <div class="chev">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        </div>
+
+                        <div class="filter-input-wrapper">
+                            <label for="vesselSearch" class="sr-only">Search Vessel</label>
+                            <div class="filter-input-wrapper relative">
+                                <svg class="search-icon w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                <input type="text" id="vesselSearch" placeholder="Search Vessel..." class="filter-input" />
                             </div>
                         </div>
                     </div>
@@ -158,21 +187,28 @@
                         let shortApproachCount = 0;
                         const container = document.getElementById('timelineContainer');
                         const select = document.getElementById('branchSelect');
+                        const companySelect = document.getElementById('companySelect');
                         const branches = new Set();
+                        const companies = new Set();
                         const branchCounts = {};
+                        const companyCounts = {};
                         
                         data.forEach(row => {
                             if (row.name_branch) {
                                 branches.add(row.name_branch);
                                 branchCounts[row.name_branch] = (branchCounts[row.name_branch] || 0) + 1;
                             }
+                            if (row.company_name) {
+                                companies.add(row.company_name);
+                                companyCounts[row.company_name] = (companyCounts[row.company_name] || 0) + 1;
+                            }
                         });
                         
-                        // Populate select
-                        const allOption = document.createElement('option');
-                        allOption.value = 'all';
-                        allOption.textContent = `All Branches (${data.length})`;
-                        select.appendChild(allOption);
+                        // Populate branch select
+                        const allBranchOption = document.createElement('option');
+                        allBranchOption.value = 'all';
+                        allBranchOption.textContent = `All Branches (${data.length})`;
+                        select.appendChild(allBranchOption);
                         
                         Array.from(branches).sort().forEach(branch => {
                             const option = document.createElement('option');
@@ -180,22 +216,37 @@
                             option.textContent = `${branch} (${branchCounts[branch]})`;
                             select.appendChild(option);
                         });
+
+                        // Populate company select
+                        const allCompanyOption = document.createElement('option');
+                        allCompanyOption.value = 'all';
+                        allCompanyOption.textContent = `All Companies (${data.length})`;
+                        companySelect.appendChild(allCompanyOption);
+                        
+                        Array.from(companies).sort().forEach(company => {
+                            const option = document.createElement('option');
+                            option.value = company;
+                            option.textContent = `${company} (${companyCounts[company]})`;
+                            companySelect.appendChild(option);
+                        });
                         
                         data.forEach(row => {
                             const card = document.createElement('div');
                             card.className = 'bg-white rounded-xl shadow-md card-hover p-6 border border-gray-200 transition-all duration-300';
                             card.setAttribute('data-branch', row.name_branch || '');
+                            card.setAttribute('data-company', row.company_name || '');
                             card.setAttribute('data-vessel', row.vessel_name || '');
                             
                             const header = document.createElement('h3');
                             header.className = 'text-lg font-semibold text-gray-800 mb-3 flex items-center justify-between';
                             header.innerHTML = `
                                 <span class="text-sm md:text-base text-gray-600">${row.vessel_name || 'N/A'}</span>
-                                <span class="flex items-center text-sm">
-                                    <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <span class="flex items-center text-sm gap-3">
+                                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
                                     </svg>
-                                    Order ID: ${row.id_order_header || 'N/A'}
+                                    <span class="text-xs text-gray-500">Order No: ${row.order_no || 'N/A'}</span>
+                                    <span class="font-mono text-xs text-gray-700">ID: ${row.id_order_header || 'N/A'}</span>
                                 </span>
                             `;
                             card.appendChild(header);
@@ -207,6 +258,10 @@
                             
                             const details = document.createElement('div');
                             details.className = 'grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 text-xs md:text-sm bg-gray-50 p-3 rounded-lg border';
+                            
+                            const companyName = document.createElement('div');
+                            companyName.innerHTML = `<strong class="text-indigo-700">Company:</strong> ${row.company_name || 'N/A'}`;
+                            details.appendChild(companyName);
                             
                             const requestTime = document.createElement('div');
                             requestTime.innerHTML = `<strong class="text-indigo-700">Pilot Request Time:</strong> ${row.pilot_request_time ? new Date(row.pilot_request_time).toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'N/A'}`;
@@ -330,14 +385,17 @@
                         // Filter function
                         function filterCards() {
                             const selectedBranch = document.getElementById('branchSelect').value;
+                            const selectedCompany = document.getElementById('companySelect').value;
                             const searchTerm = document.getElementById('vesselSearch').value.toLowerCase();
                             const cards = container.querySelectorAll('[data-branch]');
                             cards.forEach(card => {
                                 const branch = card.getAttribute('data-branch');
+                                const company = card.getAttribute('data-company');
                                 const vessel = card.getAttribute('data-vessel').toLowerCase();
                                 const branchMatch = selectedBranch === 'all' || branch === selectedBranch;
+                                const companyMatch = selectedCompany === 'all' || company === selectedCompany;
                                 const vesselMatch = !searchTerm || vessel.includes(searchTerm);
-                                if (branchMatch && vesselMatch) {
+                                if (branchMatch && companyMatch && vesselMatch) {
                                     card.style.display = 'block';
                                 } else {
                                     card.style.display = 'none';
@@ -346,6 +404,7 @@
                         }
                         
                         select.addEventListener('change', filterCards);
+                        companySelect.addEventListener('change', filterCards);
                         document.getElementById('vesselSearch').addEventListener('input', filterCards);
                     }
                 });
