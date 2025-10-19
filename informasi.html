@@ -133,6 +133,17 @@
                                 Vessel Activities All Branch
                             </h2>
                             <p class="text-gray-600 text-xs font-medium">Today's pilot activities (00:00 - 23:59)</p>
+                            <!-- Branch Filter Combobox -->
+                            <div class="mt-2 bg-white/80 px-3 py-2 rounded-lg shadow-md border border-white/50 inline-block">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                    </svg>
+                                    <select id="branchFilter" class="bg-transparent border-none outline-none text-sm font-semibold text-gray-700 cursor-pointer">
+                                        <option value="">All Branches</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="flex items-center space-x-6">
@@ -154,7 +165,6 @@
                             </div>
                         </div>
                         <div class="bg-white/80 px-4 py-2 rounded-xl shadow-lg border border-white/50">
-                            <div class="flex items-center space-x-2" id="paginationControls">
                                 <button id="prevPage" class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                     ← Prev
                                 </button>
@@ -313,7 +323,26 @@
                                 return bT - aT;
                             });
 
-                            // Filter for today only (from 00:00 to 23:59)
+                            // Populate branch filter
+                            const branchFilter = document.getElementById('branchFilter');
+                            const branches = [...new Set(allActivities.map(a => a.name_branch).filter(b => b && b.trim()))].sort();
+                            branchFilter.innerHTML = '<option value="">All Branches</option>';
+                            branches.forEach(branch => {
+                                const option = document.createElement('option');
+                                option.value = branch;
+                                option.textContent = branch;
+                                branchFilter.appendChild(option);
+                            });
+
+                            // Add event listener for branch filter
+                            branchFilter.addEventListener('change', () => {
+                                fetchAndRender();
+                            });
+
+                            // Get selected branch filter
+                            const selectedBranch = branchFilter.value;
+
+                            // Filter for today only (from 00:00 to 23:59) and branch
                             function isToday(d) {
                                 if (!d || isNaN(d.getTime())) return false;
                                 const n = new Date();
@@ -325,7 +354,9 @@
                             const filtered = allActivities.filter(a => {
                                 const raw = a.pilot_request_time || a.pilot_deploy || a.pilot_off;
                                 if (!raw) return false;
-                                return isToday(new Date(raw));
+                                const isDateValid = isToday(new Date(raw));
+                                const isBranchValid = !selectedBranch || a.name_branch === selectedBranch;
+                                return isDateValid && isBranchValid;
                             });
 
                             // Sort by estimasi time (ascending)
@@ -381,12 +412,14 @@
             let estimasi = '-';
             if (activity.pilot_request_time) {
                 const dt = new Date(activity.pilot_request_time);
+                const timezone = activity.timezone_name || 'WIB';
                 estimasi = dt.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'}) + ' ' +
-                          dt.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+                          dt.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) + ' ' + timezone;
             } else if (activity.pilot_deploy) {
                 const dt = new Date(activity.pilot_deploy);
+                const timezone = activity.timezone_name || 'WIB';
                 estimasi = dt.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'}) + ' ' +
-                          dt.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+                          dt.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) + ' ' + timezone;
             }
 
             // Determine status - check pilot_off or pilot_end first, then use activity.status
