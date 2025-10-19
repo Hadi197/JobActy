@@ -530,7 +530,7 @@
                 if (scrollHeight > clientHeight) {
                     let currentScroll = 0;
                     const maxScroll = scrollHeight - clientHeight;
-                    const scrollStep = maxScroll / 500; // 200 frames for slower animation
+                    const scrollStep = maxScroll / 50000; // 200 frames for slower animation
 
                     scrollInterval = setInterval(() => {
                         currentScroll += scrollStep;
@@ -542,7 +542,7 @@
                             top: currentScroll,
                             behavior: 'auto'
                         });
-                    }, 500); // 40ms intervals for slower animation
+                    }, 10); // 40ms intervals for slower animation
                 }
             }
         }
