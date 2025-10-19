@@ -389,7 +389,14 @@
                           dt.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
             }
 
-            const status = (activity.status || 'scheduled').toLowerCase();
+            // Determine status - check pilot_off or pilot_end first, then use activity.status
+            let status = (activity.status || 'scheduled').toLowerCase();
+
+            // If pilot_off or pilot_end is filled (not null/empty), override status to completed
+            if ((activity.pilot_off && activity.pilot_off.trim() !== '') ||
+                (activity.pilot_end && activity.pilot_end.trim() !== '')) {
+                status = 'completed';
+            }
 
             // Determine pandu data - hide full_name for DELAY status
             const pandu = (status === 'delayed') ? '-' : (activity.full_name || activity.pilot_name || activity.pilot_id || activity.pilot || '-');
