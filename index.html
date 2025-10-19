@@ -267,7 +267,7 @@
                         
                         // Count statuses
                         data.forEach(row => {
-                            const reqTime = row.pilot_request_time ? new Date(row.pilot_request_time) : null;
+                            const reqTime = row.request_time ? new Date(row.request_time) : null;
                             const deployTime = row.pilot_deploy ? new Date(row.pilot_deploy) : null;
                             let status = 'NORMAL';
                             if (reqTime) {
@@ -473,7 +473,7 @@
                             details.appendChild(companyName);
                             
                             const requestTime = document.createElement('div');
-                            requestTime.innerHTML = `<strong class="text-indigo-700">Pilot Request Time:</strong> ${row.pilot_request_time ? new Date(row.pilot_request_time).toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'N/A'}`;
+                            requestTime.innerHTML = `<strong class="text-indigo-700">Pilot Request Time:</strong> ${row.request_time ? new Date(row.request_time).toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'N/A'}`;
                             details.appendChild(requestTime);
                             
                             const pilotName = document.createElement('div');
@@ -569,7 +569,7 @@
                             
                             // Cek jika delay
                             const now = new Date();
-                            const reqTime = row.pilot_request_time ? new Date(row.pilot_request_time) : null;
+                            const reqTime = row.request_time ? new Date(row.request_time) : null;
                             const deployTime = row.pilot_deploy ? new Date(row.pilot_deploy) : null;
                             
                             // Calculate status

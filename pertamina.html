@@ -258,7 +258,7 @@
                             // Categorize activities
                             const scheduled = [], active = [], completed = [], delayed = [];
                             data.forEach(row => {
-                                const requestTime = row.pilot_request_time ? new Date(row.pilot_request_time) : null;
+                                const requestTime = row.request_time ? new Date(row.request_time) : null;
                                 const deployTime = row.pilot_deploy ? new Date(row.pilot_deploy) : null;
                                 const endTime = row.pilot_off ? new Date(row.pilot_off) : null;
                                 const pilotOnboard = row.pilot_onboard; // Check for pilot onboard data
@@ -292,8 +292,8 @@
                                 ...completed.map(r => ({...r, priority: 4, status: 'completed'}))
                             ].sort((a, b) => {
                                 if (a.priority !== b.priority) return a.priority - b.priority;
-                                const aT = new Date(a.pilot_request_time || a.pilot_deploy || a.pilot_off || 0);
-                                const bT = new Date(b.pilot_request_time || b.pilot_deploy || b.pilot_off || 0);
+                                const aT = new Date(a.request_time || a.pilot_deploy || a.pilot_off || 0);
+                                const bT = new Date(b.request_time || b.pilot_deploy || a.pilot_off || 0);
                                 return bT - aT;
                             });
 
@@ -326,7 +326,7 @@
                             }
 
                             const filtered = allActivities.filter(a => {
-                                const raw = a.pilot_request_time || a.pilot_deploy || a.pilot_off;
+                                const raw = a.request_time || a.pilot_deploy || a.pilot_off;
                                 if (!raw) return false;
                                 const isDateValid = isToday(raw);
                                 const isCompanyValid = a.company_name && a.company_name.toUpperCase().includes("PERTAMINA");
@@ -335,8 +335,8 @@
 
                             // Sort by estimasi time (ascending)
                             filtered.sort((a, b) => {
-                                const aTime = new Date(a.pilot_request_time || a.pilot_deploy || a.pilot_off || 0);
-                                const bTime = new Date(b.pilot_request_time || b.pilot_deploy || b.pilot_off || 0);
+                                const aTime = new Date(a.request_time || a.pilot_deploy || a.pilot_off || 0);
+                                const bTime = new Date(b.request_time || b.pilot_deploy || a.pilot_off || 0);
                                 return aTime - bTime; // ascending order
                             });
 
@@ -389,8 +389,8 @@
             const gerakan = activity.location_name || '-';
 
             let estimasi = '-';
-            if (activity.pilot_request_time) {
-                const dt = new Date(activity.pilot_request_time);
+            if (activity.request_time) {
+                const dt = new Date(activity.request_time);
                 const timezone = activity.timezone_name || 'WIB';
                 estimasi = dt.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'}) + ' ' +
                           dt.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) + ' ' + timezone;
