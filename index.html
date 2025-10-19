@@ -54,11 +54,11 @@
         /* Filters layout helpers to avoid overlap and keep proportions */
         .filters-grid { display: grid; grid-template-columns: 1fr; gap: 0.75rem; align-items: center; }
         @media (min-width: 768px) {
-            /* On tablet+ show five columns: branch, company, status, search, clear */
-            .filters-grid { grid-template-columns: 1fr 1fr 1fr 1fr auto; }
+            /* On tablet+ show six columns: total data, branch, company, status, search, clear */
+            .filters-grid { grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto; }
         }
         .filter-control { position: relative; }
-        .filter-select, .filter-input { width: 100%; padding: 0.5rem 2.5rem 0.5rem 0.9rem; border-radius: 0.5rem; border: 1px solid #e6edf3; box-shadow: none; background: #ffffff; }
+        .filter-select, .filter-input { width: 100%; padding: 0.75rem 2.5rem 0.75rem 0.9rem; border-radius: 0.5rem; border: 1px solid #e6edf3; box-shadow: none; background: #ffffff; font-size: 0.875rem; }
         .filter-select:focus, .filter-input:focus { outline: none; box-shadow: 0 0 0 4px rgba(99,102,241,0.06); border-color: rgba(99,102,241,0.3); }
         .filter-control .chev { position: absolute; right: 0.65rem; top: 50%; transform: translateY(-50%); pointer-events: none; color: #94a3b8; }
         /* Ensure the search input icon is left-aligned without overlapping text */
@@ -86,38 +86,36 @@
             <p class="text-md md:text-lg text-gray-600 max-w-3xl mx-auto">
                 Real-time monitoring of pilot activities
             </p>
-            <div class="mt-6 flex gap-4 justify-center">
-                <button id="boardButton" class="inline-flex items-center px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+            <div class="mt-6 grid grid-cols-2 gap-4 justify-center max-w-lg mx-auto">
+                <button id="boardButton" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-sm">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                     </svg>
                     BOARD
                 </button>
-                <button id="pertaminaButton" class="inline-flex items-center px-6 py-2 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                <button id="pertaminaButton" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-sm">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                     </svg>
                     BOARD PERTAMINA
                 </button>
+                <button id="banjarmasinButton" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    BOARD BANJARMASIN
+                </button>
+                <button id="perakButton" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    BOARD PERAK
+                </button>
             </div>
         </div>
 
         <!-- Stats Cards (harbor themed) -->
-    <div class="grid grid-cols-1 gap-3 mb-6 mt-4">
-            <!-- Card 1: Total Data -->
-            <div class="relative rounded-lg p-1 ring-0 card-hover overflow-hidden glass card-entrance">
-                <div class="absolute left-0 top-0 bottom-0 w-1 rounded-tr-lg rounded-br-lg harbor-accent"></div>
-                <div class="flex items-center gap-1 ml-1">
-                        <div class="flex-shrink-0 p-0.5 rounded-full" style="background:var(--harbor-50)">
-                        <svg class="w-2.5 h-2.5 harbor-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3v18h18"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 13l4-4 4 4 6-6"/></svg>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-gray-500">Total Data</p>
-                        <p id="totalDataTop" class="text-sm md:text-base lg:text-lg font-extrabold text-gray-900">0</p>
-                    </div>
-                </div>
-            </div>
-
+    <div class="grid grid-cols-1 gap-3 mb-6 mt-4 hidden">
             <!-- Card 2: Total Kapal Delay -->
             <div class="relative rounded-lg p-1 ring-0 card-hover overflow-hidden glass card-entrance hidden">
                 <div class="absolute left-0 top-0 bottom-0 w-1 rounded-tr-lg rounded-br-lg" style="background:linear-gradient(180deg,var(--harbor-rose),#fecaca)"></div>
@@ -156,6 +154,21 @@
                 </div>
                 <div class="flex justify-center">
                     <div class="filters-grid w-full max-w-4xl">
+                        <div class="filter-control">
+                            <div class="relative rounded-lg p-1 ring-0 card-hover overflow-hidden glass card-entrance" style="min-width: 120px;">
+                                <div class="absolute left-0 top-0 bottom-0 w-1 rounded-tr-lg rounded-br-lg harbor-accent"></div>
+                                <div class="flex items-center gap-1 ml-1">
+                                    <div class="flex-shrink-0 p-0.5 rounded-full" style="background:var(--harbor-50)">
+                                        <svg class="w-2.5 h-2.5 harbor-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3v18h18"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 13l4-4 4 4 6-6"/></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] text-gray-500">Total Data</p>
+                                        <p id="totalDataTop" class="text-sm md:text-base lg:text-lg font-extrabold text-gray-900">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="filter-control">
                             <label for="branchSelect" class="sr-only">Branch</label>
                             <div class="relative">
@@ -671,6 +684,16 @@
         // BOARD PERTAMINA button functionality
         document.getElementById('pertaminaButton').addEventListener('click', function() {
             window.location.href = 'pertamina.html';
+        });
+
+        // BOARD BANJARMASIN button functionality
+        document.getElementById('banjarmasinButton').addEventListener('click', function() {
+            window.location.href = 'banjarmasin.html';
+        });
+
+        // BOARD PERAK button functionality
+        document.getElementById('perakButton').addEventListener('click', function() {
+            window.location.href = 'perak.html';
         });
     </script>
         <!-- subtle ship silhouette for background ambiance -->
