@@ -456,11 +456,21 @@
                     </div>
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-700 text-center bg-white/60 backdrop-blur-sm">
-                    <div class="flex items-center justify-center space-x-2">
-                        <svg class="w-4 h-4 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                        </svg>
-                        <span class="font-medium">${pandu}</span>
+                    <div class="flex flex-col items-center justify-center space-y-1">
+                        <div class="flex items-center justify-center space-x-2">
+                            <svg class="w-4 h-4 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            <span class="font-medium">${pandu}</span>
+                        </div>
+                        ${status === 'serving' && activity.pilot_onboard ? `
+                        <div class="text-xs text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded-md border border-blue-200">
+                            <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Pilot Onboard: ${new Date(activity.pilot_onboard).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}
+                        </div>
+                        ` : ''}
                     </div>
                 </td>
                 <td class="px-6 py-4 text-center bg-white/40 backdrop-blur-sm">
