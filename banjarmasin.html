@@ -506,7 +506,7 @@
                 if (scrollHeight > clientHeight) {
                     let currentScroll = 0;
                     const maxScroll = scrollHeight - clientHeight;
-                    const scrollStep = maxScroll / 2000; // 200 frames for slower animation
+                    const scrollStep = maxScroll / 500; // 200 frames for slower animation
 
                     scrollInterval = setInterval(() => {
                         currentScroll += scrollStep;
