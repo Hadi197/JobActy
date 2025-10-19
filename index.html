@@ -6,7 +6,7 @@
     <title>Pilot Monitoring Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         /* subtle gradient line for timelines */
         .timeline-line { background: linear-gradient(90deg, rgba(99,102,241,0.15), rgba(96,165,250,0.15)); }
@@ -29,7 +29,7 @@
                 .harbor-accent { background: linear-gradient(180deg, var(--harbor-400), var(--harbor-300)); }
                 .harbor-text { color: var(--harbor-500); }
                         /* Pleasant page background and cards */
-                        body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+                        body { font-family: 'Roboto', system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial; }
                         .page-gradient { background: linear-gradient(180deg, #f7fbff 0%, #eef9ff 50%, #f7fbff 100%); }
                         .decor-wave { position: absolute; left: 0; right: 0; height: 140px; top: 0; pointer-events: none; opacity: 0.9; }
                         .card-soft { background: rgba(255,255,255,0.9); box-shadow: 0 8px 24px rgba(13, 38, 59, 0.06); border: 1px solid rgba(15, 23, 42, 0.03); }
@@ -77,14 +77,27 @@
         </svg>
         <div class="container mx-auto px-4 py-12 max-w-7xl relative">
         <!-- Header -->
-        <div class="text-center mb-8 relative">
+        <div class="text-center mb-8 relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-8 shadow-lg border border-blue-100">
             <div class="bubble bubble--one"></div>
             <div class="bubble bubble--two"></div>
-            <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
-                Pilot Monitoring Dashboard
-            </h1>
-            <p class="text-md md:text-lg text-gray-600 max-w-3xl mx-auto">
-                Real-time monitoring of pilot activities
+            <div class="flex items-center justify-center mb-4">
+                <div class="flex items-center space-x-2 mr-4">
+                    <!-- Tugboat Icon -->
+                    <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l-2 5h4l-2 5M3 12h18M3 17h18M3 22h18M9 12v10M15 12v10"/>
+                    </svg>
+                    <!-- Pilot Boat Icon -->
+                    <svg class="w-10 h-10 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l-2 5h4l-2 5M3 12h18M3 17h18M3 22h18M9 12v10M15 12v10"/>
+                        <circle cx="12" cy="7" r="2" fill="currentColor"/>
+                    </svg>
+                </div>
+                <h1 class="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+                    Pilot Monitoring Dashboard
+                </h1>
+            </div>
+            <p class="text-md md:text-lg text-gray-600 max-w-3xl mx-auto mb-6">
+                Real-time monitoring of pilot activities with live updates and comprehensive insights
             </p>
             <div class="mt-6 grid grid-cols-2 gap-4 justify-center max-w-lg mx-auto">
                 <button id="boardButton" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-sm">
