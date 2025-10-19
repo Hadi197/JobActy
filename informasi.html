@@ -16,12 +16,13 @@
         }
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
             min-height: 100vh;
             width: 100%;
         }
-        .overflow-y-auto {
-            scroll-behavior: smooth;
+                .overflow-y-auto {
+            overflow-y: auto;
+            scroll-behavior: auto;
         }
         .glass-effect {
             background: rgba(255, 255, 255, 0.95);
@@ -29,7 +30,7 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
         .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
         }
         .status-badge {
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -43,7 +44,7 @@
             transition: all 0.2s ease;
         }
         .table-row:hover {
-            background: linear-gradient(90deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, rgba(30, 64, 175, 0.05) 100%);
             transform: scale(1.01);
         }
         .pulse-animation {
@@ -85,20 +86,20 @@
         <div class="w-full px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-3">
                 <button id="homeButton" class="flex items-center space-x-4 hover:opacity-80 transition-opacity duration-300 cursor-pointer bg-transparent border-none p-0">
-                    <div class="bg-gradient-to-br from-blue-500 to-purple-600 p-3 rounded-xl shadow-lg">
+                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-3 rounded-xl shadow-lg">
                         <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                         </svg>
                     </div>
                     <div>
-                        <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
                             Pilot Information Display
                         </h1>
                         <p class="text-gray-600 text-base font-medium">Real-time pilot activity monitoring system</p>
                     </div>
                 </button>
                 <div class="text-right">
-                    <div id="currentTime" class="text-3xl font-mono font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"></div>
+                    <div id="currentTime" class="text-3xl font-mono font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent"></div>
                     <div id="currentDate" class="text-sm text-gray-600 font-medium"></div>
                     <div class="flex items-center space-x-2 mt-2">
                         <div class="w-2 h-2 bg-green-500 rounded-full pulse-animation"></div>
@@ -120,65 +121,49 @@
     <main class="w-full h-full px-4 sm:px-6 lg:px-8 py-6">
         <!-- Vessel Board -->
         <div class="glass-effect rounded-3xl shadow-2xl overflow-hidden border border-white/20">
-            <div class="px-4 py-3 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-white/30">
+            <div class="px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-white/30">
                 <div class="flex justify-between items-center">
                     <div class="flex items-center space-x-4">
-                        <div class="bg-gradient-to-br from-blue-500 to-purple-600 p-1.5 rounded-md shadow-lg">
+                        <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-1.5 rounded-md shadow-lg">
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                            <h2 class="text-lg font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
                                 Vessel Activities All Branch
                             </h2>
                             <p class="text-gray-600 text-xs font-medium">Today's pilot activities (00:00 - 23:59)</p>
-                            <!-- Branch Filter Combobox -->
-                            <div class="mt-2 bg-white/80 px-3 py-2 rounded-lg shadow-md border border-white/50 inline-block">
-                                <div class="flex items-center space-x-2">
-                                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                                    </svg>
-                                    <select id="branchFilter" class="bg-transparent border-none outline-none text-sm font-semibold text-gray-700 cursor-pointer">
-                                        <option value="">All Branches</option>
-                                    </select>
-                                </div>
-                            </div>
                         </div>
                     </div>
                     <div class="flex items-center space-x-6">
+                        <!-- Branch Filter Combobox -->
+                        <div class="bg-white/80 px-3 py-2 rounded-lg shadow-md border border-white/50">
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                </svg>
+                                <select id="branchFilter" class="bg-transparent border-none outline-none text-sm font-semibold text-gray-700 cursor-pointer">
+                                    <option value="">All Branches</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="bg-white/80 px-6 py-3 rounded-xl shadow-lg border border-white/50 hidden">
                             <div class="flex items-center space-x-3">
-                                <div class="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"></div>
+                                <div class="w-3 h-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"></div>
                                 <div>
                                     <p class="text-sm font-semibold text-gray-700">Total Activities</p>
-                                    <p class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent" id="totalActivities">0</p>
+                                    <p class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" id="totalActivities">0</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-white/80 px-4 py-2 rounded-xl shadow-lg border border-white/50 hidden">
-                            <div class="flex items-center space-x-2">
-                                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                </svg>
-                                <span class="text-sm font-semibold text-gray-700">Auto Page <span id="currentPage">1</span> of <span id="totalPages">1</span> (10s • Refresh after all)</span>
-                            </div>
-                        </div>
-                        <div class="bg-white/80 px-4 py-2 rounded-xl shadow-lg border border-white/50">
-                                <button id="prevPage" class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                    ← Prev
-                                </button>
-                                <div class="flex space-x-1" id="pageNumbers"></div>
-                                <button id="nextPage" class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                    Next →
-                                </button>
-                            </div>
+
                         </div>
                     </div>
                 </div>
             </div>
             <table class="w-full table-fixed text-sm mb-0">
-                <thead class="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+                <thead class="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
                     <tr>
                         <th class="px-6 py-4 text-center text-sm font-bold uppercase tracking-wider w-1/6">
                             <div class="flex items-center justify-center space-x-2">
@@ -232,7 +217,7 @@
                     </tr>
                 </thead>
             </table>
-            <div class="overflow-y-auto max-h-screen bg-gradient-to-b from-white/50 to-blue-50/30">
+            <div class="overflow-y-auto max-h-screen bg-gradient-to-b from-white/50 to-blue-100/30">
                 <table class="w-full table-fixed text-sm">
                     <tbody id="boardRows" class="bg-transparent">
                         <!-- Rows will be populated by JavaScript -->
@@ -241,7 +226,7 @@
             </div>
             <div id="noDataMessage" class="px-12 py-16 text-center hidden">
                 <div class="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/50 max-w-md mx-auto">
-                    <div class="bg-gradient-to-br from-blue-100 to-purple-100 p-6 rounded-full w-24 h-24 mx-auto mb-6">
+                    <div class="bg-gradient-to-br from-blue-100 to-blue-200 p-6 rounded-full w-24 h-24 mx-auto mb-6">
                         <svg class="w-12 h-12 text-blue-600 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
@@ -249,7 +234,7 @@
                     <h3 class="text-xl font-bold text-gray-900 mb-2">No Activities Today</h3>
                     <p class="text-gray-600 font-medium">No pilot activities scheduled for today.</p>
                     <div class="mt-4 flex justify-center">
-                        <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold">
+                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold">
                             System Ready
                         </div>
                     </div>
@@ -387,8 +372,13 @@
                                     const row = createTableRow(activity);
                                     boardRows.appendChild(row);
                                 });
-                                // Initialize pagination after rendering
-                                setTimeout(initializePagination, 500);
+                                // Start infinite scroll animation
+                                setTimeout(startInfiniteScroll, 500);
+
+                                // Auto refresh data every 10 minutes
+                                setTimeout(() => {
+                                    fetchAndRender();
+                                }, 600000);
                             }
                         }
                     });
@@ -529,252 +519,58 @@
 
         // Pagination system with auto-advance
         let currentPage = 0;
-        const rowsPerPage = 12;
+        const rowsPerPage = 10;
         let totalPages = 1;
         let tableRows = [];
         let autoAdvanceInterval = null;
+        let scrollInterval = null;
         const autoAdvanceDelay = 20000; // 20 seconds per page
 
-        function initializePagination() {
-            tableRows = document.querySelectorAll('#boardRows tr');
-            totalPages = Math.ceil(tableRows.length / rowsPerPage);
 
-            // Update page indicators
-            const currentPageEl = document.getElementById('currentPage');
-            const totalPagesEl = document.getElementById('totalPages');
-            if (currentPageEl) currentPageEl.textContent = '1';
-            if (totalPagesEl) totalPagesEl.textContent = totalPages;
 
-            // Reset to first page
-            currentPage = 0;
-            showPage(0);
 
-            // Update pagination controls
-            updatePaginationControls();
 
-            // Start auto-advance
-            startAutoAdvance();
-        }
 
-        function startAutoAdvance() {
-            // Clear any existing interval
-            if (autoAdvanceInterval) {
-                clearInterval(autoAdvanceInterval);
-            }
 
-            autoAdvanceInterval = setInterval(() => {
-                if (currentPage < totalPages - 1) {
-                    // Go to next page
-                    goToPage(currentPage + 1);
-                } else {
-                    // Reached the last page, perform data refresh and restart from page 1
-                    clearInterval(autoAdvanceInterval);
-                    autoAdvanceInterval = null;
-
-                    // Show "Last Page - Refreshing..." indicator
-                    const currentPageEl = document.getElementById('currentPage');
-                    if (currentPageEl) {
-                        currentPageEl.textContent = `${totalPages} ✓`;
-                    }
-
-                    setTimeout(() => {
-                        const totalActivitiesEl = document.getElementById('totalActivities');
-                        if (totalActivitiesEl) {
-                            totalActivitiesEl.textContent = '...';
-                        }
-                        fetchAndRender(); // Data refresh after all pages displayed
-                    }, 3000); // Longer pause on last page
-                }
-            }, autoAdvanceDelay);
-        }
-
-        function stopAutoAdvance() {
-            if (autoAdvanceInterval) {
-                clearInterval(autoAdvanceInterval);
-                autoAdvanceInterval = null;
-            }
-        }
-
-        function showPage(pageIndex) {
-            const startRow = pageIndex * rowsPerPage;
-            const endRow = startRow + rowsPerPage;
-
-            tableRows.forEach((row, index) => {
-                if (index >= startRow && index < endRow) {
-                    row.style.display = 'table-row';
-                    // Add fade-in animation for new rows
-                    row.style.opacity = '0';
-                    row.style.transform = 'translateY(20px)';
-                    setTimeout(() => {
-                        row.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-                        row.style.opacity = '1';
-                        row.style.transform = 'translateY(0)';
-                    }, 50 * (index - startRow)); // Stagger animation
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-
-            // Scroll animation: scroll to top then slowly scroll down
+        function startInfiniteScroll() {
+            // Continuous scroll animation: scroll down continuously, reset to top when reaching bottom
             const tableContainer = document.querySelector('.overflow-y-auto');
             if (tableContainer) {
-                // First scroll to top
-                tableContainer.scrollTo({
-                    top: 0,
-                    behavior: 'smooth'
-                });
-
-                // Then after a delay, scroll down slowly to show content
-                setTimeout(() => {
-                    const scrollHeight = tableContainer.scrollHeight;
-                    const clientHeight = tableContainer.clientHeight;
-                    if (scrollHeight > clientHeight) {
-                        // Scroll down over 6 seconds (slower)
-                        const scrollStep = (scrollHeight - clientHeight) / 300; // 120 frames for 6 seconds at 20fps
-                        let currentScroll = 0;
-                        const scrollInterval = setInterval(() => {
-                            currentScroll += scrollStep;
-                            if (currentScroll >= scrollHeight - clientHeight) {
-                                tableContainer.scrollTo({
-                                    top: scrollHeight - clientHeight,
-                                    behavior: 'smooth'
-                                });
-                                clearInterval(scrollInterval);
-                            } else {
-                                tableContainer.scrollTo({
-                                    top: currentScroll,
-                                    behavior: 'auto'
-                                });
-                            }
-                        }, 50); // 50ms intervals
-                    }
-                }, 1000); // Wait 1 second after scrolling to top
-            }
-
-            // Update current page indicator
-            const currentPageEl = document.getElementById('currentPage');
-            if (currentPageEl) currentPageEl.textContent = (pageIndex + 1).toString();
-        }
-
-        function updatePaginationControls() {
-            const prevBtn = document.getElementById('prevPage');
-            const nextBtn = document.getElementById('nextPage');
-            const pageNumbers = document.getElementById('pageNumbers');
-
-            // Update prev/next button states
-            if (prevBtn) {
-                prevBtn.disabled = currentPage === 0;
-            }
-            if (nextBtn) {
-                nextBtn.disabled = currentPage === totalPages - 1;
-            }
-
-            // Generate page number buttons
-            if (pageNumbers) {
-                pageNumbers.innerHTML = '';
-                const maxVisiblePages = 5;
-                let startPage = Math.max(0, currentPage - Math.floor(maxVisiblePages / 2));
-                let endPage = Math.min(totalPages - 1, startPage + maxVisiblePages - 1);
-
-                // Adjust start page if we're near the end
-                if (endPage - startPage + 1 < maxVisiblePages) {
-                    startPage = Math.max(0, endPage - maxVisiblePages + 1);
+                // Stop any existing scroll interval
+                if (scrollInterval) {
+                    clearInterval(scrollInterval);
+                    scrollInterval = null;
                 }
 
-                for (let i = startPage; i <= endPage; i++) {
-                    const pageBtn = document.createElement('button');
-                    pageBtn.textContent = (i + 1).toString();
-                    pageBtn.className = `px-2 py-1 rounded-lg text-sm font-medium transition-colors ${
-                        i === currentPage
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                    }`;
-                    pageBtn.onclick = () => goToPage(i);
-                    pageNumbers.appendChild(pageBtn);
+                // Start continuous scroll: down to bottom then reset to top, repeat
+                const scrollHeight = tableContainer.scrollHeight;
+                const clientHeight = tableContainer.clientHeight;
+                if (scrollHeight > clientHeight) {
+                    let currentScroll = 0;
+                    const maxScroll = scrollHeight - clientHeight;
+                    const scrollStep = maxScroll / 2000; // 200 frames for slower animation
+
+                    scrollInterval = setInterval(() => {
+                        currentScroll += scrollStep;
+                        if (currentScroll >= maxScroll) {
+                            currentScroll = 0; // Reset to top when reaching bottom
+                        }
+
+                        tableContainer.scrollTo({
+                            top: currentScroll,
+                            behavior: 'auto'
+                        });
+                    }, 500); // 40ms intervals for slower animation
                 }
             }
         }
 
-        function goToPage(pageIndex) {
-            if (pageIndex >= 0 && pageIndex < totalPages) {
-                currentPage = pageIndex;
-                showPage(currentPage);
-                updatePaginationControls();
 
-                // Restart auto-advance timer after manual navigation
-                startAutoAdvance();
-            }
-        }
 
-        function nextPage() {
-            if (currentPage < totalPages - 1) {
-                goToPage(currentPage + 1);
-            }
-        }
 
-        function prevPage() {
-            if (currentPage > 0) {
-                goToPage(currentPage - 1);
-            }
-        }        // Pagination controls with auto-advance
+
+
         document.addEventListener('DOMContentLoaded', function() {
-            let userInteractionTimeout = null;
-
-            // Pagination button event listeners
-            const prevBtn = document.getElementById('prevPage');
-            const nextBtn = document.getElementById('nextPage');
-            const paginationControls = document.getElementById('paginationControls');
-
-            function handleUserInteraction() {
-                // Pause auto-advance on user interaction
-                stopAutoAdvance();
-
-                // Clear existing timeout
-                if (userInteractionTimeout) {
-                    clearTimeout(userInteractionTimeout);
-                }
-
-                // Resume auto-advance after 30 seconds of inactivity
-                userInteractionTimeout = setTimeout(() => {
-                    startAutoAdvance();
-                }, 30000); // 30 seconds
-            }
-
-            if (prevBtn) {
-                prevBtn.addEventListener('click', () => {
-                    prevPage();
-                    handleUserInteraction();
-                });
-            }
-
-            if (nextBtn) {
-                nextBtn.addEventListener('click', () => {
-                    nextPage();
-                    handleUserInteraction();
-                });
-            }
-
-            // Handle page number button clicks
-            if (paginationControls) {
-                paginationControls.addEventListener('click', (event) => {
-                    if (event.target.matches('#pageNumbers button')) {
-                        handleUserInteraction();
-                    }
-                });
-            }
-
-            // Keyboard navigation
-            document.addEventListener('keydown', function(event) {
-                if (event.key === 'ArrowLeft') {
-                    event.preventDefault();
-                    prevPage();
-                    handleUserInteraction();
-                } else if (event.key === 'ArrowRight') {
-                    event.preventDefault();
-                    nextPage();
-                    handleUserInteraction();
-                }
-            });
 
             // Fullscreen functionality
             const fullscreenBtn = document.getElementById('fullscreenBtn');
