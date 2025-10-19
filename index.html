@@ -233,448 +233,461 @@
     </div>
 
     <script>
-        // Load CSV data
-        fetch('job.csv')
-            .then(response => response.text())
-            .then(csvText => {
-                Papa.parse(csvText, {
-                    header: true,
-                    complete: function(results) {
-                        const data = results.data;
-                        document.getElementById('totalDataTop').textContent = `Total Data: ${data.length}`;
-                        let delayCount = 0;
-                        let shortApproachCount = 0;
-                        let warningCount = 0;
-                        const container = document.getElementById('timelineContainer');
-                        const branchInput = document.getElementById('branchSelect');
-                        const companyInput = document.getElementById('companySelect');
-                        const statusInput = document.getElementById('statusSelect');
-                        const branchDropdown = document.getElementById('branchDropdown');
-                        const companyDropdown = document.getElementById('companyDropdown');
-                        const statusDropdown = document.getElementById('statusDropdown');
-                        const branches = new Set();
-                        const companies = new Set();
-                        const branchCounts = {};
-                        const companyCounts = {};
-                        
-                        data.forEach(row => {
-                            if (row.name_branch) {
-                                const branch = row.name_branch.trim();
-                                branches.add(branch);
-                                branchCounts[branch] = (branchCounts[branch] || 0) + 1;
-                            }
-                            if (row.company_name) {
-                                const company = row.company_name.trim();
-                                companies.add(company);
-                                companyCounts[company] = (companyCounts[company] || 0) + 1;
-                            }
-                        });
-                        
-                        // Store data for filtering
-                        const branchData = Array.from(branches).sort();
-                        const companyData = Array.from(companies).sort();
-                        const statusData = ['DELAY', 'MENDEKATI PELAYANAN', 'NORMAL'];
-                        const statusCounts = { 'DELAY': 0, 'MENDEKATI PELAYANAN': 0, 'NORMAL': 0 };
-                        
-                        const now = new Date();
-                        
-                        // Count statuses
-                        data.forEach(row => {
-                            const reqTime = row.request_time ? new Date(row.request_time) : null;
-                            const deployTime = row.pilot_deploy ? new Date(row.pilot_deploy) : null;
-                            let status = 'NORMAL';
-                            if (reqTime) {
-                                if (reqTime < now && !deployTime) {
-                                    status = 'DELAY';
-                                } else if (reqTime > now && (reqTime - now) <= 30 * 60 * 1000) {
-                                    status = 'MENDEKATI PELAYANAN';
+        // Function to fetch and render data
+        function fetchAndRender() {
+            fetch('job.csv')
+                .then(response => response.text())
+                .then(csvText => {
+                    Papa.parse(csvText, {
+                        header: true,
+                        complete: function(results) {
+                            const data = results.data;
+                            document.getElementById('totalDataTop').textContent = `Total Data: ${data.length}`;
+                            let delayCount = 0;
+                            let shortApproachCount = 0;
+                            let warningCount = 0;
+                            const container = document.getElementById('timelineContainer');
+                            const branchInput = document.getElementById('branchSelect');
+                            const companyInput = document.getElementById('companySelect');
+                            const statusInput = document.getElementById('statusSelect');
+                            const branchDropdown = document.getElementById('branchDropdown');
+                            const companyDropdown = document.getElementById('companyDropdown');
+                            const statusDropdown = document.getElementById('statusDropdown');
+                            const branches = new Set();
+                            const companies = new Set();
+                            const branchCounts = {};
+                            const companyCounts = {};
+                            
+                            data.forEach(row => {
+                                if (row.name_branch) {
+                                    const branch = row.name_branch.trim();
+                                    branches.add(branch);
+                                    branchCounts[branch] = (branchCounts[branch] || 0) + 1;
                                 }
-                            }
-                            statusCounts[status]++;
-                        });
-                        
-                        // Function to render dropdown options
-                        function renderDropdown(dropdown, data, counts, searchTerm = '') {
-                            dropdown.innerHTML = '';
-                            const filteredData = data.filter(item => 
-                                item.toLowerCase().includes(searchTerm.toLowerCase())
-                            );
-                            
-                            // Add "All" option first (only if no search term or if "all" matches)
-                            if (!searchTerm || 'all'.includes(searchTerm.toLowerCase())) {
-                                const allOption = document.createElement('div');
-                                allOption.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm font-medium';
-                                allOption.textContent = `All (${data.length})`;
-                                allOption.dataset.value = 'all';
-                                dropdown.appendChild(allOption);
-                            }
-                            
-                            // Add filtered options
-                            filteredData.forEach(item => {
-                                const option = document.createElement('div');
-                                option.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm';
-                                option.textContent = `${item} (${counts[item]})`;
-                                option.dataset.value = item;
-                                dropdown.appendChild(option);
+                                if (row.company_name) {
+                                    const company = row.company_name.trim();
+                                    companies.add(company);
+                                    companyCounts[company] = (companyCounts[company] || 0) + 1;
+                                }
                             });
                             
-                            // Show "No results" if no matches
-                            if (filteredData.length === 0 && searchTerm && !'all'.includes(searchTerm.toLowerCase())) {
-                                const noResult = document.createElement('div');
-                                noResult.className = 'px-3 py-2 text-sm text-gray-500';
-                                noResult.textContent = 'No results found';
-                                dropdown.appendChild(noResult);
-                            }
-                        }
-                        
-                        // Initialize dropdowns
-                        renderDropdown(branchDropdown, branchData, branchCounts);
-                        renderDropdown(companyDropdown, companyData, companyCounts);
-                        renderDropdown(statusDropdown, statusData, statusCounts);
-                        
-                        // Handle input focus
-                        branchInput.addEventListener('focus', () => {
-                            const currentValue = branchInput.dataset.value;
-                            if (currentValue === 'all') {
-                                branchInput.value = '';
-                            }
-                            renderDropdown(branchDropdown, branchData, branchCounts, branchInput.value);
-                            branchDropdown.classList.remove('hidden');
-                            branchInput.nextElementSibling.classList.add('rotate');
-                            companyDropdown.classList.add('hidden');
-                            companyInput.nextElementSibling.classList.remove('rotate');
-                            statusDropdown.classList.add('hidden');
-                            statusInput.nextElementSibling.classList.remove('rotate');
-                        });
-                        
-                        companyInput.addEventListener('focus', () => {
-                            const currentValue = companyInput.dataset.value;
-                            if (currentValue === 'all') {
-                                companyInput.value = '';
-                            }
-                            renderDropdown(companyDropdown, companyData, companyCounts, companyInput.value);
-                            companyDropdown.classList.remove('hidden');
-                            companyInput.nextElementSibling.classList.add('rotate');
-                            branchDropdown.classList.add('hidden');
-                            branchInput.nextElementSibling.classList.remove('rotate');
-                            statusDropdown.classList.add('hidden');
-                            statusInput.nextElementSibling.classList.remove('rotate');
-                        });
-                        
-                        statusInput.addEventListener('focus', () => {
-                            const currentValue = statusInput.dataset.value;
-                            if (currentValue === 'all') {
-                                statusInput.value = '';
-                            }
-                            renderDropdown(statusDropdown, statusData, statusCounts, statusInput.value);
-                            statusDropdown.classList.remove('hidden');
-                            statusInput.nextElementSibling.classList.add('rotate');
-                            branchDropdown.classList.add('hidden');
-                            branchInput.nextElementSibling.classList.remove('rotate');
-                            companyDropdown.classList.add('hidden');
-                            companyInput.nextElementSibling.classList.remove('rotate');
-                        });
-                        
-                        // Handle input changes
-                        branchInput.addEventListener('input', (e) => {
-                            renderDropdown(branchDropdown, branchData, branchCounts, e.target.value);
-                            branchDropdown.classList.remove('hidden');
-                            branchInput.nextElementSibling.classList.add('rotate');
-                        });
-                        
-                        companyInput.addEventListener('input', (e) => {
-                            renderDropdown(companyDropdown, companyData, companyCounts, e.target.value);
-                            companyDropdown.classList.remove('hidden');
-                            companyInput.nextElementSibling.classList.add('rotate');
-                        });
-                        
-                        statusInput.addEventListener('input', (e) => {
-                            renderDropdown(statusDropdown, statusData, statusCounts, e.target.value);
-                            statusDropdown.classList.remove('hidden');
-                            statusInput.nextElementSibling.classList.add('rotate');
-                        });
-                        
-                        // Handle dropdown selection
-                        branchDropdown.addEventListener('click', (e) => {
-                            if (e.target.dataset.value) {
-                                const selectedValue = e.target.dataset.value;
-                                branchInput.dataset.value = selectedValue;
-                                if (selectedValue === 'all') {
-                                    branchInput.value = `All Branches (${branchData.length})`;
-                                } else {
-                                    branchInput.value = e.target.textContent;
-                                }
-                                branchDropdown.classList.add('hidden');
-                                branchInput.nextElementSibling.classList.remove('rotate');
-                                filterCards();
-                            }
-                        });
-                        
-                        companyDropdown.addEventListener('click', (e) => {
-                            if (e.target.dataset.value) {
-                                const selectedValue = e.target.dataset.value;
-                                companyInput.dataset.value = selectedValue;
-                                if (selectedValue === 'all') {
-                                    companyInput.value = `All Companies (${companyData.length})`;
-                                } else {
-                                    companyInput.value = e.target.textContent;
-                                }
-                                companyDropdown.classList.add('hidden');
-                                companyInput.nextElementSibling.classList.remove('rotate');
-                                filterCards();
-                            }
-                        });
-                        
-                        statusDropdown.addEventListener('click', (e) => {
-                            if (e.target.dataset.value) {
-                                const selectedValue = e.target.dataset.value;
-                                statusInput.dataset.value = selectedValue;
-                                if (selectedValue === 'all') {
-                                    statusInput.value = `All Statuses (${statusData.length})`;
-                                } else {
-                                    statusInput.value = e.target.textContent;
-                                }
-                                statusDropdown.classList.add('hidden');
-                                statusInput.nextElementSibling.classList.remove('rotate');
-                                filterCards();
-                            }
-                        });
-                        
-                        // Close dropdowns when clicking outside
-                        document.addEventListener('click', (e) => {
-                            if (!e.target.closest('.filter-control')) {
-                                branchDropdown.classList.add('hidden');
-                                companyDropdown.classList.add('hidden');
-                                statusDropdown.classList.add('hidden');
-                                branchInput.nextElementSibling.classList.remove('rotate');
-                                companyInput.nextElementSibling.classList.remove('rotate');
-                                statusInput.nextElementSibling.classList.remove('rotate');
-                            }
-                        });
-                        
-                        data.forEach(row => {
-                            const card = document.createElement('div');
-                            card.className = 'bg-white rounded-xl shadow-md card-hover p-6 border border-gray-200 transition-all duration-300';
-                            card.setAttribute('data-branch', (row.name_branch || '').trim());
-                            card.setAttribute('data-company', (row.company_name || '').trim());
-                            card.setAttribute('data-vessel', row.vessel_name || '');
+                            // Store data for filtering
+                            const branchData = Array.from(branches).sort();
+                            const companyData = Array.from(companies).sort();
+                            const statusData = ['DELAY', 'MENDEKATI PELAYANAN', 'NORMAL'];
+                            const statusCounts = { 'DELAY': 0, 'MENDEKATI PELAYANAN': 0, 'NORMAL': 0 };
                             
-                            const header = document.createElement('h3');
-                            header.className = 'text-lg font-semibold text-gray-800 mb-3 flex items-center justify-between';
-                            header.innerHTML = `
-                                <span class="text-sm md:text-base text-gray-600">${row.vessel_name || 'N/A'}</span>
-                                <span class="flex items-center text-sm gap-3">
-                                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
-                                    </svg>
-                                    <span class="text-xs text-gray-500">Order No: ${row.order_no || 'N/A'}</span>
-                                    <span class="font-mono text-xs text-gray-700">ID: ${row.id_order_header || 'N/A'}</span>
-                                </span>
-                            `;
-                            card.appendChild(header);
+                            const now = new Date();
                             
-                            const branchDiv = document.createElement('div');
-                            branchDiv.className = 'text-xs text-gray-500';
-                            branchDiv.textContent = row.name_branch || 'N/A';
-                            card.appendChild(branchDiv);
-                            
-                            const details = document.createElement('div');
-                            details.className = 'grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 text-xs md:text-sm bg-gray-50 p-3 rounded-lg border';
-                            
-                            const companyName = document.createElement('div');
-                            companyName.innerHTML = `<strong class="text-indigo-700">Company:</strong> ${row.company_name || 'N/A'}`;
-                            details.appendChild(companyName);
-                            
-                            const requestTime = document.createElement('div');
-                            requestTime.innerHTML = `<strong class="text-indigo-700">Pilot Request Time:</strong> ${row.request_time ? new Date(row.request_time).toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'N/A'}`;
-                            details.appendChild(requestTime);
-                            
-                            const pilotName = document.createElement('div');
-                            pilotName.innerHTML = `<strong class="text-indigo-700">Pilot Name:</strong> ${row.full_name || 'N/A'}`;
-                            details.appendChild(pilotName);
-                            
-                            const locationName = document.createElement('div');
-                            locationName.innerHTML = `<strong class="text-indigo-700">Location:</strong> ${row.location_name || 'N/A'}`;
-                            details.appendChild(locationName);
-                            
-                            const noPkk = document.createElement('div');
-                            noPkk.innerHTML = `<strong class="text-indigo-700">No PKK Inaportnet:</strong> ${row.no_pkk_inaportnet || 'N/A'}`;
-                            details.appendChild(noPkk);
-                            
-                            card.appendChild(details);
-                            
-                            const timeline = document.createElement('div');
-                            timeline.className = 'relative flex items-center space-x-4 overflow-x-auto bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg';
-                            
-                            // Add connecting line
-                            const line = document.createElement('div');
-                            line.className = 'absolute top-8 left-8 right-8 h-0.5 timeline-line z-0';
-                            timeline.appendChild(line);
-                            
-                            const steps = [
-                                { label: 'Pilot Deploy', time: row.pilot_deploy },
-                                { label: 'Pilot Arrive', time: row.pilot_arrive },
-                                { label: 'Pilot Onboard', time: row.pilot_onboard },
-                                { label: 'Pilot Start', time: row.pilot_start },
-                                { label: 'Pilot End', time: row.pilot_end },
-                                { label: 'Pilot Off', time: row.pilot_off }
-                            ];
-                            
-                            // Check if Pilot Start to Pilot End duration < 30 minutes
-                            const pilotStartTime = row.pilot_start ? new Date(row.pilot_start) : null;
-                            const pilotEndTime = row.pilot_end ? new Date(row.pilot_end) : null;
-                            const isShortDuration = pilotStartTime && pilotEndTime && (pilotEndTime - pilotStartTime) < 10 * 60 * 1000;
-                            if (isShortDuration) shortApproachCount++;
-                            
-                            steps.forEach((step, index) => {
-                                const stepDiv = document.createElement('div');
-                                stepDiv.className = 'flex flex-col items-center min-w-0 z-10';
-                                
-                                const icon = document.createElement('div');
-                                const isCompleted = step.time ? true : false;
-                                let bgColor = 'bg-gray-400';
-                                if (isCompleted) {
-                                    if ((step.label === 'Pilot Start' || step.label === 'Pilot End') && isShortDuration) {
-                                        bgColor = 'bg-red-500';
-                                    } else {
-                                        bgColor = 'bg-blue-500';
+                            // Count statuses
+                            data.forEach(row => {
+                                const reqTime = row.request_time ? new Date(row.request_time) : null;
+                                const deployTime = row.pilot_deploy ? new Date(row.pilot_deploy) : null;
+                                let status = 'NORMAL';
+                                if (reqTime) {
+                                    if (reqTime < now && !deployTime) {
+                                        status = 'DELAY';
+                                    } else if (reqTime > now && (reqTime - now) <= 30 * 60 * 1000) {
+                                        status = 'MENDEKATI PELAYANAN';
                                     }
                                 }
-                                icon.className = `w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md ${bgColor}`;
-                                icon.innerHTML = step.time ? `
-                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                    </svg>
-                                ` : `${index + 1}`;
-                                stepDiv.appendChild(icon);
+                                statusCounts[status]++;
+                            });
+                            
+                            // Function to render dropdown options
+                            function renderDropdown(dropdown, data, counts, searchTerm = '') {
+                                dropdown.innerHTML = '';
+                                const filteredData = data.filter(item => 
+                                    item.toLowerCase().includes(searchTerm.toLowerCase())
+                                );
                                 
-                                const label = document.createElement('div');
-                                label.className = 'text-[11px] text-gray-700 mt-2 text-center font-medium';
-                                label.textContent = step.label;
-                                stepDiv.appendChild(label);
-                                
-                                const time = document.createElement('div');
-                                time.className = 'text-[11px] text-gray-600 mt-1 text-center bg-white px-2 py-1 rounded shadow-sm';
-                                if (step.time) {
-                                    const date = new Date(step.time);
-                                    time.textContent = date.toLocaleString('id-ID', { 
-                                        year: 'numeric', 
-                                        month: '2-digit', 
-                                        day: '2-digit', 
-                                        hour: '2-digit', 
-                                        minute: '2-digit' 
-                                    });
-                                } else {
-                                    time.textContent = 'Proses';
+                                // Add "All" option first (only if no search term or if "all" matches)
+                                if (!searchTerm || 'all'.includes(searchTerm.toLowerCase())) {
+                                    const allOption = document.createElement('div');
+                                    allOption.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm font-medium';
+                                    allOption.textContent = `All (${data.length})`;
+                                    allOption.dataset.value = 'all';
+                                    dropdown.appendChild(allOption);
                                 }
-                                stepDiv.appendChild(time);
                                 
-                                timeline.appendChild(stepDiv);
+                                // Add filtered options
+                                filteredData.forEach(item => {
+                                    const option = document.createElement('div');
+                                    option.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm';
+                                    option.textContent = `${item} (${counts[item]})`;
+                                    option.dataset.value = item;
+                                    dropdown.appendChild(option);
+                                });
                                 
-                                if (index < steps.length - 1) {
-                                    const spacer = document.createElement('div');
-                                    spacer.className = 'w-8';
-                                    timeline.appendChild(spacer);
+                                // Show "No results" if no matches
+                                if (filteredData.length === 0 && searchTerm && !'all'.includes(searchTerm.toLowerCase())) {
+                                    const noResult = document.createElement('div');
+                                    noResult.className = 'px-3 py-2 text-sm text-gray-500';
+                                    noResult.textContent = 'No results found';
+                                    dropdown.appendChild(noResult);
+                                }
+                            }
+                            
+                            // Initialize dropdowns
+                            renderDropdown(branchDropdown, branchData, branchCounts);
+                            renderDropdown(companyDropdown, companyData, companyCounts);
+                            renderDropdown(statusDropdown, statusData, statusCounts);
+                            
+                            // Handle input focus
+                            branchInput.addEventListener('focus', () => {
+                                const currentValue = branchInput.dataset.value;
+                                if (currentValue === 'all') {
+                                    branchInput.value = '';
+                                }
+                                renderDropdown(branchDropdown, branchData, branchCounts, branchInput.value);
+                                branchDropdown.classList.remove('hidden');
+                                branchInput.nextElementSibling.classList.add('rotate');
+                                companyDropdown.classList.add('hidden');
+                                companyInput.nextElementSibling.classList.remove('rotate');
+                                statusDropdown.classList.add('hidden');
+                                statusInput.nextElementSibling.classList.remove('rotate');
+                            });
+                            
+                            companyInput.addEventListener('focus', () => {
+                                const currentValue = companyInput.dataset.value;
+                                if (currentValue === 'all') {
+                                    companyInput.value = '';
+                                }
+                                renderDropdown(companyDropdown, companyData, companyCounts, companyInput.value);
+                                companyDropdown.classList.remove('hidden');
+                                companyInput.nextElementSibling.classList.add('rotate');
+                                branchDropdown.classList.add('hidden');
+                                branchInput.nextElementSibling.classList.remove('rotate');
+                                statusDropdown.classList.add('hidden');
+                                statusInput.nextElementSibling.classList.remove('rotate');
+                            });
+                            
+                            statusInput.addEventListener('focus', () => {
+                                const currentValue = statusInput.dataset.value;
+                                if (currentValue === 'all') {
+                                    statusInput.value = '';
+                                }
+                                renderDropdown(statusDropdown, statusData, statusCounts, statusInput.value);
+                                statusDropdown.classList.remove('hidden');
+                                statusInput.nextElementSibling.classList.add('rotate');
+                                branchDropdown.classList.add('hidden');
+                                branchInput.nextElementSibling.classList.remove('rotate');
+                                companyDropdown.classList.add('hidden');
+                                companyInput.nextElementSibling.classList.remove('rotate');
+                            });
+                            
+                            // Handle input changes
+                            branchInput.addEventListener('input', (e) => {
+                                renderDropdown(branchDropdown, branchData, branchCounts, e.target.value);
+                                branchDropdown.classList.remove('hidden');
+                                branchInput.nextElementSibling.classList.add('rotate');
+                            });
+                            
+                            companyInput.addEventListener('input', (e) => {
+                                renderDropdown(companyDropdown, companyData, companyCounts, e.target.value);
+                                companyDropdown.classList.remove('hidden');
+                                companyInput.nextElementSibling.classList.add('rotate');
+                            });
+                            
+                            statusInput.addEventListener('input', (e) => {
+                                renderDropdown(statusDropdown, statusData, statusCounts, e.target.value);
+                                statusDropdown.classList.remove('hidden');
+                                statusInput.nextElementSibling.classList.add('rotate');
+                            });
+                            
+                            // Handle dropdown selection
+                            branchDropdown.addEventListener('click', (e) => {
+                                if (e.target.dataset.value) {
+                                    const selectedValue = e.target.dataset.value;
+                                    branchInput.dataset.value = selectedValue;
+                                    if (selectedValue === 'all') {
+                                        branchInput.value = `All Branches (${branchData.length})`;
+                                    } else {
+                                        branchInput.value = e.target.textContent;
+                                    }
+                                    branchDropdown.classList.add('hidden');
+                                    branchInput.nextElementSibling.classList.remove('rotate');
+                                    filterCards();
                                 }
                             });
                             
-                            card.appendChild(timeline);
-                            
-                            // Cek jika delay
-                            const now = new Date();
-                            const reqTime = row.request_time ? new Date(row.request_time) : null;
-                            const deployTime = row.pilot_deploy ? new Date(row.pilot_deploy) : null;
-                            
-                            // Calculate status
-                            let status = 'NORMAL';
-                            if (reqTime) {
-                                if (reqTime < now && !deployTime) {
-                                    status = 'DELAY';
-                                } else if (reqTime > now && (reqTime - now) <= 30 * 60 * 1000) {
-                                    status = 'MENDEKATI PELAYANAN';
-                                }
-                            }
-                            
-                            card.setAttribute('data-status', status);
-                            
-                            // Check if within 30 minutes before pilot request time
-                            if (reqTime && reqTime > now && (reqTime - now) <= 30 * 60 * 1000) {
-                                card.classList.add('warning-card');
-                                const warningDiv = document.createElement('div');
-                                warningDiv.className = 'mt-4 p-3 rounded-lg text-center font-semibold warning-badge';
-                                warningDiv.textContent = '⚠️ PILOT REQUEST IN < 30 MIN';
-                                card.appendChild(warningDiv);
-                                warningCount++;
-                            }
-                            
-                            if (reqTime && reqTime < now && !deployTime) {
-                                // mark card visually as delayed using harbor delay styles
-                                card.classList.add('delay-card');
-                                const delayDiv = document.createElement('div');
-                                delayDiv.className = 'mt-4 p-3 rounded-lg text-center font-semibold delay-badge';
-                                delayDiv.textContent = '🚨 DELAY DETECTED';
-                                card.appendChild(delayDiv);
-                                delayCount++;
-                            }
-                            
-                            container.appendChild(card);
-                        });
-                        
-                        document.getElementById('totalDelayTop').textContent = `Total Kapal Delay: ${delayCount}`;
-                        document.getElementById('totalWarningTop').textContent = `Pilot Request < 30min: ${warningCount}`;
-                        
-                        // Filter function
-                        function filterCards() {
-                            const selectedBranch = document.getElementById('branchSelect').dataset.value || 'all';
-                            const selectedCompany = document.getElementById('companySelect').dataset.value || 'all';
-                            const selectedStatus = document.getElementById('statusSelect').dataset.value || 'all';
-                            const searchTerm = document.getElementById('vesselSearch').value.toLowerCase();
-                            const cards = container.querySelectorAll('[data-branch]');
-                            cards.forEach(card => {
-                                const branch = card.getAttribute('data-branch');
-                                const company = card.getAttribute('data-company');
-                                const status = card.getAttribute('data-status');
-                                const vessel = card.getAttribute('data-vessel').toLowerCase();
-                                const branchMatch = selectedBranch === 'all' || branch === selectedBranch;
-                                const companyMatch = selectedCompany === 'all' || company === selectedCompany;
-                                const statusMatch = selectedStatus === 'all' || status === selectedStatus;
-                                const vesselMatch = !searchTerm || vessel.includes(searchTerm);
-                                if (branchMatch && companyMatch && statusMatch && vesselMatch) {
-                                    card.style.display = 'block';
-                                } else {
-                                    card.style.display = 'none';
+                            companyDropdown.addEventListener('click', (e) => {
+                                if (e.target.dataset.value) {
+                                    const selectedValue = e.target.dataset.value;
+                                    companyInput.dataset.value = selectedValue;
+                                    if (selectedValue === 'all') {
+                                        companyInput.value = `All Companies (${companyData.length})`;
+                                    } else {
+                                        companyInput.value = e.target.textContent;
+                                    }
+                                    companyDropdown.classList.add('hidden');
+                                    companyInput.nextElementSibling.classList.remove('rotate');
+                                    filterCards();
                                 }
                             });
-                        }
-                        
-                        // Initial filter (show all)
-                        document.getElementById('branchSelect').dataset.value = 'all';
-                        document.getElementById('companySelect').dataset.value = 'all';
-                        document.getElementById('statusSelect').dataset.value = 'all';
-                        document.getElementById('branchSelect').value = `All Branches (${branchData.length})`;
-                        document.getElementById('companySelect').value = `All Companies (${companyData.length})`;
-                        document.getElementById('statusSelect').value = `All Statuses (${statusData.length})`;
-                        
-                        document.getElementById('vesselSearch').addEventListener('input', filterCards);
-                        
-                        // Clear filters button
-                        document.getElementById('clearFilters').addEventListener('click', () => {
+                            
+                            statusDropdown.addEventListener('click', (e) => {
+                                if (e.target.dataset.value) {
+                                    const selectedValue = e.target.dataset.value;
+                                    statusInput.dataset.value = selectedValue;
+                                    if (selectedValue === 'all') {
+                                        statusInput.value = `All Statuses (${statusData.length})`;
+                                    } else {
+                                        statusInput.value = e.target.textContent;
+                                    }
+                                    statusDropdown.classList.add('hidden');
+                                    statusInput.nextElementSibling.classList.remove('rotate');
+                                    filterCards();
+                                }
+                            });
+                            
+                            // Close dropdowns when clicking outside
+                            document.addEventListener('click', (e) => {
+                                if (!e.target.closest('.filter-control')) {
+                                    branchDropdown.classList.add('hidden');
+                                    companyDropdown.classList.add('hidden');
+                                    statusDropdown.classList.add('hidden');
+                                    branchInput.nextElementSibling.classList.remove('rotate');
+                                    companyInput.nextElementSibling.classList.remove('rotate');
+                                    statusInput.nextElementSibling.classList.remove('rotate');
+                                }
+                            });
+                            
+                            // Clear existing cards
+                            container.innerHTML = '';
+                            
+                            data.forEach(row => {
+                                const card = document.createElement('div');
+                                card.className = 'bg-white rounded-xl shadow-md card-hover p-6 border border-gray-200 transition-all duration-300';
+                                card.setAttribute('data-branch', (row.name_branch || '').trim());
+                                card.setAttribute('data-company', (row.company_name || '').trim());
+                                card.setAttribute('data-vessel', row.vessel_name || '');
+                                
+                                const header = document.createElement('h3');
+                                header.className = 'text-lg font-semibold text-gray-800 mb-3 flex items-center justify-between';
+                                header.innerHTML = `
+                                    <span class="text-sm md:text-base text-gray-600">${row.vessel_name || 'N/A'}</span>
+                                    <span class="flex items-center text-sm gap-3">
+                                        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                                        </svg>
+                                        <span class="text-xs text-gray-500">Order No: ${row.order_no || 'N/A'}</span>
+                                        <span class="font-mono text-xs text-gray-700">ID: ${row.id_order_header || 'N/A'}</span>
+                                    </span>
+                                `;
+                                card.appendChild(header);
+                                
+                                const branchDiv = document.createElement('div');
+                                branchDiv.className = 'text-xs text-gray-500';
+                                branchDiv.textContent = row.name_branch || 'N/A';
+                                card.appendChild(branchDiv);
+                                
+                                const details = document.createElement('div');
+                                details.className = 'grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 text-xs md:text-sm bg-gray-50 p-3 rounded-lg border';
+                                
+                                const companyName = document.createElement('div');
+                                companyName.innerHTML = `<strong class="text-indigo-700">Company:</strong> ${row.company_name || 'N/A'}`;
+                                details.appendChild(companyName);
+                                
+                                const requestTime = document.createElement('div');
+                                requestTime.innerHTML = `<strong class="text-indigo-700">Pilot Request Time:</strong> ${row.request_time ? new Date(row.request_time).toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'N/A'}`;
+                                details.appendChild(requestTime);
+                                
+                                const pilotName = document.createElement('div');
+                                pilotName.innerHTML = `<strong class="text-indigo-700">Pilot Name:</strong> ${row.full_name || 'N/A'}`;
+                                details.appendChild(pilotName);
+                                
+                                const locationName = document.createElement('div');
+                                locationName.innerHTML = `<strong class="text-indigo-700">Location:</strong> ${row.location_name || 'N/A'}`;
+                                details.appendChild(locationName);
+                                
+                                const noPkk = document.createElement('div');
+                                noPkk.innerHTML = `<strong class="text-indigo-700">No PKK Inaportnet:</strong> ${row.no_pkk_inaportnet || 'N/A'}`;
+                                details.appendChild(noPkk);
+                                
+                                card.appendChild(details);
+                                
+                                const timeline = document.createElement('div');
+                                timeline.className = 'relative flex items-center space-x-4 overflow-x-auto bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg';
+                                
+                                // Add connecting line
+                                const line = document.createElement('div');
+                                line.className = 'absolute top-8 left-8 right-8 h-0.5 timeline-line z-0';
+                                timeline.appendChild(line);
+                                
+                                const steps = [
+                                    { label: 'Pilot Deploy', time: row.pilot_deploy },
+                                    { label: 'Pilot Arrive', time: row.pilot_arrive },
+                                    { label: 'Pilot Onboard', time: row.pilot_onboard },
+                                    { label: 'Pilot Start', time: row.pilot_start },
+                                    { label: 'Pilot End', time: row.pilot_end },
+                                    { label: 'Pilot Off', time: row.pilot_off }
+                                ];
+                                
+                                // Check if Pilot Start to Pilot End duration < 30 minutes
+                                const pilotStartTime = row.pilot_start ? new Date(row.pilot_start) : null;
+                                const pilotEndTime = row.pilot_end ? new Date(row.pilot_end) : null;
+                                const isShortDuration = pilotStartTime && pilotEndTime && (pilotEndTime - pilotStartTime) < 10 * 60 * 1000;
+                                if (isShortDuration) shortApproachCount++;
+                                
+                                steps.forEach((step, index) => {
+                                    const stepDiv = document.createElement('div');
+                                    stepDiv.className = 'flex flex-col items-center min-w-0 z-10';
+                                    
+                                    const icon = document.createElement('div');
+                                    const isCompleted = step.time ? true : false;
+                                    let bgColor = 'bg-gray-400';
+                                    if (isCompleted) {
+                                        if ((step.label === 'Pilot Start' || step.label === 'Pilot End') && isShortDuration) {
+                                            bgColor = 'bg-red-500';
+                                        } else {
+                                            bgColor = 'bg-blue-500';
+                                        }
+                                    }
+                                    icon.className = `w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md ${bgColor}`;
+                                    icon.innerHTML = step.time ? `
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    ` : `${index + 1}`;
+                                    stepDiv.appendChild(icon);
+                                    
+                                    const label = document.createElement('div');
+                                    label.className = 'text-[11px] text-gray-700 mt-2 text-center font-medium';
+                                    label.textContent = step.label;
+                                    stepDiv.appendChild(label);
+                                    
+                                    const time = document.createElement('div');
+                                    time.className = 'text-[11px] text-gray-600 mt-1 text-center bg-white px-2 py-1 rounded shadow-sm';
+                                    if (step.time) {
+                                        const date = new Date(step.time);
+                                        time.textContent = date.toLocaleString('id-ID', { 
+                                            year: 'numeric', 
+                                            month: '2-digit', 
+                                            day: '2-digit', 
+                                            hour: '2-digit', 
+                                            minute: '2-digit' 
+                                        });
+                                    } else {
+                                        time.textContent = 'Proses';
+                                    }
+                                    stepDiv.appendChild(time);
+                                    
+                                    timeline.appendChild(stepDiv);
+                                    
+                                    if (index < steps.length - 1) {
+                                        const spacer = document.createElement('div');
+                                        spacer.className = 'w-8';
+                                        timeline.appendChild(spacer);
+                                    }
+                                });
+                                
+                                card.appendChild(timeline);
+                                
+                                // Cek jika delay
+                                const now = new Date();
+                                const reqTime = row.request_time ? new Date(row.request_time) : null;
+                                const deployTime = row.pilot_deploy ? new Date(row.pilot_deploy) : null;
+                                
+                                // Calculate status
+                                let status = 'NORMAL';
+                                if (reqTime) {
+                                    if (reqTime < now && !deployTime) {
+                                        status = 'DELAY';
+                                    } else if (reqTime > now && (reqTime - now) <= 30 * 60 * 1000) {
+                                        status = 'MENDEKATI PELAYANAN';
+                                    }
+                                }
+                                
+                                card.setAttribute('data-status', status);
+                                
+                                // Check if within 30 minutes before pilot request time
+                                if (reqTime && reqTime > now && (reqTime - now) <= 30 * 60 * 1000) {
+                                    card.classList.add('warning-card');
+                                    const warningDiv = document.createElement('div');
+                                    warningDiv.className = 'mt-4 p-3 rounded-lg text-center font-semibold warning-badge';
+                                    warningDiv.textContent = '⚠️ PILOT REQUEST IN < 30 MIN';
+                                    card.appendChild(warningDiv);
+                                    warningCount++;
+                                }
+                                
+                                if (reqTime && reqTime < now && !deployTime) {
+                                    // mark card visually as delayed using harbor delay styles
+                                    card.classList.add('delay-card');
+                                    const delayDiv = document.createElement('div');
+                                    delayDiv.className = 'mt-4 p-3 rounded-lg text-center font-semibold delay-badge';
+                                    delayDiv.textContent = '🚨 DELAY DETECTED';
+                                    card.appendChild(delayDiv);
+                                    delayCount++;
+                                }
+                                
+                                container.appendChild(card);
+                            });
+                            
+                            document.getElementById('totalDelayTop').textContent = `Total Kapal Delay: ${delayCount}`;
+                            document.getElementById('totalWarningTop').textContent = `Pilot Request < 30min: ${warningCount}`;
+                            
+                            // Filter function
+                            function filterCards() {
+                                const selectedBranch = document.getElementById('branchSelect').dataset.value || 'all';
+                                const selectedCompany = document.getElementById('companySelect').dataset.value || 'all';
+                                const selectedStatus = document.getElementById('statusSelect').dataset.value || 'all';
+                                const searchTerm = document.getElementById('vesselSearch').value.toLowerCase();
+                                const cards = container.querySelectorAll('[data-branch]');
+                                cards.forEach(card => {
+                                    const branch = card.getAttribute('data-branch');
+                                    const company = card.getAttribute('data-company');
+                                    const status = card.getAttribute('data-status');
+                                    const vessel = card.getAttribute('data-vessel').toLowerCase();
+                                    const branchMatch = selectedBranch === 'all' || branch === selectedBranch;
+                                    const companyMatch = selectedCompany === 'all' || company === selectedCompany;
+                                    const statusMatch = selectedStatus === 'all' || status === selectedStatus;
+                                    const vesselMatch = !searchTerm || vessel.includes(searchTerm);
+                                    if (branchMatch && companyMatch && statusMatch && vesselMatch) {
+                                        card.style.display = 'block';
+                                    } else {
+                                        card.style.display = 'none';
+                                    }
+                                });
+                            }
+                            
+                            // Initial filter (show all)
                             document.getElementById('branchSelect').dataset.value = 'all';
                             document.getElementById('companySelect').dataset.value = 'all';
                             document.getElementById('statusSelect').dataset.value = 'all';
                             document.getElementById('branchSelect').value = `All Branches (${branchData.length})`;
                             document.getElementById('companySelect').value = `All Companies (${companyData.length})`;
                             document.getElementById('statusSelect').value = `All Statuses (${statusData.length})`;
-                            document.getElementById('vesselSearch').value = '';
-                            filterCards();
-                        });
-                    }
+                            
+                            document.getElementById('vesselSearch').addEventListener('input', filterCards);
+                            
+                            // Clear filters button
+                            document.getElementById('clearFilters').addEventListener('click', () => {
+                                document.getElementById('branchSelect').dataset.value = 'all';
+                                document.getElementById('companySelect').dataset.value = 'all';
+                                document.getElementById('statusSelect').dataset.value = 'all';
+                                document.getElementById('branchSelect').value = `All Branches (${branchData.length})`;
+                                document.getElementById('companySelect').value = `All Companies (${companyData.length})`;
+                                document.getElementById('statusSelect').value = `All Statuses (${statusData.length})`;
+                                document.getElementById('vesselSearch').value = '';
+                                filterCards();
+                            });
+
+                            // Auto refresh data every 10 minutes
+                            setTimeout(() => {
+                                fetchAndRender();
+                            }, 600000);
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading CSV:', error);
+                    document.getElementById('timelineContainer').innerHTML = '<p class="text-center text-gray-500">Error loading data</p>';
                 });
-            })
-            .catch(error => {
-                console.error('Error loading CSV:', error);
-                document.getElementById('timelineContainer').innerHTML = '<p class="text-center text-gray-500">Error loading data</p>';
-            });
+        }
+
+        // Initial load
+        fetchAndRender();
 
         // BOARD button functionality
         document.getElementById('boardButton').addEventListener('click', function() {
