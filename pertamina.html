@@ -298,19 +298,38 @@
                             });
 
                             // Filter for today only (from 00:00 to 23:59) and Pertamina company
-                            function isToday(d) {
-                                if (!d || isNaN(d.getTime())) return false;
+                            function parseDate(dateStr) {
+                                if (!dateStr) return null;
+                                try {
+                                    // Handle format like '2025-10-19 17:30:00+00:00'
+                                    const parts = dateStr.split(' ');
+                                    if (parts.length >= 2) {
+                                        const datePart = parts[0];
+                                        const timePart = parts[1].split('+')[0]; // Remove timezone
+                                        const dateTimeStr = datePart + 'T' + timePart;
+                                        return new Date(dateTimeStr);
+                                    }
+                                    return new Date(dateStr);
+                                } catch (e) {
+                                    return null;
+                                }
+                            }
+
+                            function isToday(dateStr) {
+                                const date = parseDate(dateStr);
+                                if (!date || isNaN(date.getTime())) return false;
+                                
                                 const n = new Date();
-                                const startToday = new Date(n.getFullYear(), n.getMonth(), n.getDate(), 0, 0, 0, 0); // 00:00:00
-                                const endToday = new Date(n.getFullYear(), n.getMonth(), n.getDate(), 23, 59, 59, 999); // 23:59:59
-                                return d >= startToday && d <= endToday;
+                                const startToday = new Date(n.getFullYear(), n.getMonth(), n.getDate(), 0, 0, 0, 0);
+                                const endToday = new Date(n.getFullYear(), n.getMonth(), n.getDate(), 23, 59, 59, 999);
+                                return date >= startToday && date <= endToday;
                             }
 
                             const filtered = allActivities.filter(a => {
                                 const raw = a.pilot_request_time || a.pilot_deploy || a.pilot_off;
                                 if (!raw) return false;
-                                const isDateValid = isToday(new Date(raw));
-                                const isCompanyValid = a.company_name === "PERTAMINA";
+                                const isDateValid = isToday(raw);
+                                const isCompanyValid = a.company_name && a.company_name.toUpperCase().includes("PERTAMINA");
                                 return isDateValid && isCompanyValid;
                             });
 
@@ -518,7 +537,8 @@
                 if (scrollHeight > clientHeight) {
                     let currentScroll = 0;
                     const maxScroll = scrollHeight - clientHeight;
-                    const scrollStep = maxScroll / 2000; // 200 frames for slower animation
+                    const scrollStep = maxScroll / 400; // 1000 frames for smooth animation
+                    const scrollIntervalMs = 500; // 40ms intervals for optimal speed
 
                     scrollInterval = setInterval(() => {
                         currentScroll += scrollStep;
@@ -530,7 +550,7 @@
                             top: currentScroll,
                             behavior: 'auto'
                         });
-                    }, 500); // 40ms intervals for slower animation
+                    }, scrollIntervalMs); // Configurable interval
                 }
             }
         }
