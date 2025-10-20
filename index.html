@@ -499,27 +499,41 @@
                                 card.appendChild(branchDiv);
                                 
                                 const details = document.createElement('div');
-                                details.className = 'grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 text-xs md:text-sm bg-gray-50 p-3 rounded-lg border';
+                                details.className = 'flex flex-col md:flex-row gap-3 mb-4 text-xs md:text-sm bg-gray-50 p-3 rounded-lg border';
+                                
+                                const leftCol = document.createElement('div');
+                                leftCol.className = 'flex-1 flex flex-col gap-2';
                                 
                                 const companyName = document.createElement('div');
                                 companyName.innerHTML = `<strong class="text-indigo-700">Company:</strong> ${row.company_name || 'N/A'}`;
-                                details.appendChild(companyName);
-                                
-                                const requestTime = document.createElement('div');
-                                requestTime.innerHTML = `<strong class="text-indigo-700">Pilot Request Time:</strong> ${row.request_time ? new Date(row.request_time).toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'N/A'}`;
-                                details.appendChild(requestTime);
-                                
-                                const pilotName = document.createElement('div');
-                                pilotName.innerHTML = `<strong class="text-indigo-700">Pilot Name:</strong> ${row.full_name || 'N/A'}`;
-                                details.appendChild(pilotName);
+                                leftCol.appendChild(companyName);
                                 
                                 const locationName = document.createElement('div');
                                 locationName.innerHTML = `<strong class="text-indigo-700">Location:</strong> ${(row.location_from_name && row.location_to_name) ? `${row.location_from_name} - ${row.location_to_name}` : 'N/A'}`;
-                                details.appendChild(locationName);
+                                leftCol.appendChild(locationName);
+                                
+                                details.appendChild(leftCol);
+                                
+                                const rightCol = document.createElement('div');
+                                rightCol.className = 'flex-1 flex flex-col gap-2';
+                                
+                                const requestTime = document.createElement('div');
+                                requestTime.innerHTML = `<strong class="text-indigo-700">Pilot Request Time:</strong> ${row.request_time ? new Date(row.request_time).toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'N/A'}`;
+                                rightCol.appendChild(requestTime);
+                                
+                                const updatedAt = document.createElement('div');
+                                updatedAt.innerHTML = `<strong class="text-indigo-700">Updated At:</strong> ${row.updated_at ? new Date(row.updated_at).toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'N/A'}`;
+                                rightCol.appendChild(updatedAt);
+                                
+                                const pilotName = document.createElement('div');
+                                pilotName.innerHTML = `<strong class="text-indigo-700">Pilot Name:</strong> ${row.full_name || 'N/A'}`;
+                                rightCol.appendChild(pilotName);
                                 
                                 const noPkk = document.createElement('div');
                                 noPkk.innerHTML = `<strong class="text-indigo-700">No PKK Inaportnet:</strong> ${row.no_pkk_inaportnet || 'N/A'}`;
-                                details.appendChild(noPkk);
+                                rightCol.appendChild(noPkk);
+                                
+                                details.appendChild(rightCol);
                                 
                                 card.appendChild(details);
                                 

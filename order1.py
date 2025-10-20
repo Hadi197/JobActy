@@ -180,6 +180,7 @@ if all_data:
         extracted_data.append(extracted_item)
     
     df = pd.DataFrame(extracted_data)
+    df['updated_at'] = datetime.datetime.now(pytz.UTC)
     df.to_csv('job1.csv', index=False)
     print(f"Data saved to job1.csv with {len(extracted_data)} records")
     
@@ -279,11 +280,13 @@ if os.path.exists('job1.csv'):
         
         merged_df['location_from_name'], merged_df['location_to_name'] = zip(*merged_df['location_name'].apply(parse_location))
         
+        merged_df['updated_at'] = datetime.datetime.now(pytz.UTC)
         merged_df.to_csv('job.csv', index=False)
         print(f"Detail data joined with job1.csv and saved to job.csv with {len(merged_df)} records")
         
         # Update job1.csv with location_from_name and location_to_name
         job1_df = job1_df.merge(merged_df[['id_order_header', 'location_from_name', 'location_to_name']].drop_duplicates(), on='id_order_header', how='left')
+        job1_df['updated_at'] = datetime.datetime.now(pytz.UTC)
         job1_df.to_csv('job1.csv', index=False)
         print("job1.csv updated with location_from_name and location_to_name")
     else:
