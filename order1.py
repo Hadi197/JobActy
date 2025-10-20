@@ -6,6 +6,7 @@ import json
 import datetime
 import os
 import pytz
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # API URL
 url = "https://phinnisi.pelindo.co.id:9018/api/executing/spk-pilot"
@@ -186,8 +187,8 @@ if all_data:
 if os.path.exists('job1.csv'):
     job1_df = pd.read_csv('job1.csv')
     id_list = job1_df['id_order_header'].dropna().astype(int).tolist()
-    all_detail_data = []
-    for order_id in id_list:
+    
+    def fetch_order_detail(order_id):
         url = f"https://phinnisi.pelindo.co.id:9018/api/jobactivities/detail-order/{order_id}"
         print(f"Fetching details for order ID: {order_id}")
         try:
@@ -196,6 +197,13 @@ if os.path.exists('job1.csv'):
                 data = response.json()
                 if data and 'data' in data and data['data']:
                     df = pd.json_normalize(data)
+                    # Construct location_name from location_to and location_from if spk_success_message.location_name is empty
+                    if 'data.location_from.location_name' in df.columns and 'data.location_to.location_name' in df.columns:
+                        constructed = df['data.location_from.location_name'].fillna('') + ' → ' + df['data.location_to.location_name'].fillna('')
+                        df['data.integration_data.integration.spk_success_message.location_name'] = df['data.integration_data.integration.spk_success_message.location_name'].fillna(constructed)
+                    # Fill from alternative integration.location_name
+                    df['data.integration_data.integration.spk_success_message.location_name'] = df['data.integration_data.integration.spk_success_message.location_name'].fillna(df.get('data.integration_data.integration.location_name', ''))
+                    # Add missing columns
                     for col in desired_columns:
                         if col not in df.columns:
                             df[col] = None
@@ -226,15 +234,29 @@ if os.path.exists('job1.csv'):
                         except Exception as e:
                             print(f"Timezone conversion failed for {tz_name}: {e}")
                     
-                    all_detail_data.append(df)
                     print(f"Details fetched for order ID: {order_id}")
+                    return df
                 else:
                     print(f"No data for order ID: {order_id}")
+                    return None
             else:
                 print(f"Failed to fetch details for order ID: {order_id} - Status: {response.status_code}")
+                return None
         except Exception as e:
             print(f"Error fetching details for order ID: {order_id}: {e}")
-        time.sleep(0.3)  # Rate limit
+            return None
+    
+    all_detail_data = []
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = {executor.submit(fetch_order_detail, order_id): order_id for order_id in id_list}
+        for future in as_completed(futures):
+            order_id = futures[future]
+            try:
+                df = future.result()
+                if df is not None:
+                    all_detail_data.append(df)
+            except Exception as e:
+                print(f"Error processing order ID: {order_id}: {e}")
     if all_detail_data:
         combined_df = pd.concat(all_detail_data, ignore_index=True)
         # Join with job1.csv
@@ -243,8 +265,27 @@ if os.path.exists('job1.csv'):
         combined_df['id_order_header'] = combined_df['id_order_header'].astype(int)
         job1_df['id_order_header'] = job1_df['id_order_header'].astype(int)
         merged_df = combined_df.merge(job1_df, on='id_order_header', how='left')
+        
+        # Parse location_name to extract location_from_name and location_to_name
+        def parse_location(location):
+            if pd.isna(location):
+                return '', ''
+            location_str = str(location).strip()
+            if ' → ' in location_str:
+                parts = location_str.split(' → ', 1)
+                return parts[0].strip(), parts[1].strip()
+            else:
+                return location_str, ''
+        
+        merged_df['location_from_name'], merged_df['location_to_name'] = zip(*merged_df['location_name'].apply(parse_location))
+        
         merged_df.to_csv('job.csv', index=False)
         print(f"Detail data joined with job1.csv and saved to job.csv with {len(merged_df)} records")
+        
+        # Update job1.csv with location_from_name and location_to_name
+        job1_df = job1_df.merge(merged_df[['id_order_header', 'location_from_name', 'location_to_name']].drop_duplicates(), on='id_order_header', how='left')
+        job1_df.to_csv('job1.csv', index=False)
+        print("job1.csv updated with location_from_name and location_to_name")
     else:
         print("No detail data to save")
 else:

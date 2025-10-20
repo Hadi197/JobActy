@@ -509,7 +509,7 @@
                                 details.appendChild(pilotName);
                                 
                                 const locationName = document.createElement('div');
-                                locationName.innerHTML = `<strong class="text-indigo-700">Location:</strong> ${row.location_name || 'N/A'}`;
+                                locationName.innerHTML = `<strong class="text-indigo-700">Location:</strong> ${(row.location_from_name && row.location_to_name) ? `${row.location_from_name} - ${row.location_to_name}` : 'N/A'}`;
                                 details.appendChild(locationName);
                                 
                                 const noPkk = document.createElement('div');

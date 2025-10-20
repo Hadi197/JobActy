@@ -399,7 +399,7 @@
             const branch = activity.name_branch || '';
             const vesselWithBranch = branch ? `${vessel} (${branch})` : vessel;
             const agen = activity.company_name || '-';
-            const gerakan = activity.location_name || '-';
+            const gerakan = (activity.location_from_name && activity.location_to_name) ? `${activity.location_from_name} - ${activity.location_to_name}` : '-';
 
             let estimasi = '-';
             if (activity.request_time) {
