@@ -434,14 +434,9 @@
 
             switch (status) {
                 case 'active':
-                    statusClass = 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white';
-                    if (activity.pilot_off && activity.pilot_off.trim() !== '') {
-                        statusText = 'SELESAI PELAYANAN';
-                        statusIcon = '✅';
-                    } else {
-                        statusText = 'ACTIVE';
-                        statusIcon = '⚡';
-                    }
+                    statusClass = 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white';
+                    statusText = 'SEDANG DILAYANI';
+                    statusIcon = '🚤';
                     break;
                 case 'serving':
                     statusClass = 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white';
