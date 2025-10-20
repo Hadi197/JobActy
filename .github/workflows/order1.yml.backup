@@ -1,0 +1,58 @@
+name: Run order1.py every 30 minutes
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'  # every 30 minutes
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  run-order1:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests pandas brotli pytz
+
+    - name: Smoke test
+      run: |
+        python --version || true
+        pip --version || true
+        ls -lah | head -n 40 || true
+
+    - name: Run order1.py
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        REPO_URL: https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+      run: python order1.py
+
+    - name: Commit CSV files
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        set -e
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git pull https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git main --no-edit || true
+        git add -f job1.csv job.csv last_id.txt || true
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "Update job1.csv and job.csv"
+          git push https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
+        fi
