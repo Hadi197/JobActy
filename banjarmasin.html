@@ -428,8 +428,15 @@
                     <div class="flex flex-col items-center justify-center space-y-1">
                         <div class="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"></div>
                         <div class="text-center">
-                            <div class="text-base font-bold text-gray-900">${vessel}</div>
-                            ${branch ? `<div class="text-xs text-gray-600 font-medium">${branch}</div>` : ''}
+                            <div class="flex items-center justify-center space-x-2">
+                                <svg class="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+                                </svg>
+                                <div>
+                                    <div class="text-base font-bold text-gray-900">${vessel}</div>
+                                    ${branch ? `<div class="text-xs text-gray-600 font-medium">${branch}</div>` : ''}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </td>
