@@ -476,12 +476,20 @@
                             </svg>
                             <span class="font-medium">${pandu}</span>
                         </div>
-                        ${status === 'serving' && activity.pilot_onboard ? `
+                        ${activity.pilot_onboard ? `
                         <div class="text-xs text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded-md border border-blue-200">
                             <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                             Pilot Onboard: ${new Date(activity.pilot_onboard).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}
+                        </div>
+                        ` : ''}
+                        ${activity.pilot_off ? `
+                        <div class="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-md border border-green-200">
+                            <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Pilot Off: ${new Date(activity.pilot_off).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}
                         </div>
                         ` : ''}
                     </div>
